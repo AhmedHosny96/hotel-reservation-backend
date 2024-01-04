@@ -6,8 +6,12 @@ const cookieParser = require("cookie-parser");
 
 const path = require("path");
 // const hotelRoutes = require("./routes/hotelRoutes.js");
-
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://juba-hotel.vercel.app", // Replace with your frontend URL
+    credentials: true, // Enable credentials (cookies, authorization headers)
+  })
+);
 app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

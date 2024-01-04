@@ -121,11 +121,11 @@ const login = async (req, res) => {
   );
 
   res
-    .cookie("X-AUTH-TOKEN", token, {
-      httpOnly: true,
-      secure: true, // Ensure it's sent only over HTTPS
-      sameSite: "strict", // Optionally set 'sameSite' attribute
-    })
+    // .cookie("X-AUTH-TOKEN", token, {
+    //   httpOnly: true,
+    //   secure: true, // Ensure it's sent only over HTTPS
+    //   sameSite: "strict", // Optionally set 'sameSite' attribute
+    // })
     .send({ status: 200, message: "Login successful", token: token });
 };
 
