@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const emailSender = require("../utils/MailSender");
 
 const bcrypt = require("bcrypt");
+const { createActivityLog } = require("../utils/activityLog");
 
 // CREATE USER
 
@@ -52,12 +53,11 @@ const createUser = async (req, res) => {
     otp
   );
 
-  //   // sms OTP
-  //   sendMessage(
-  //     phone,
-  //     `Hi ${username} Here is your OTP : ${otp}
-  //       `
-  //   );
+  const { userId, client } = req.user;
+
+  const action = `Create user`;
+  const details = `User created new user  : ${JSON.stringify(payload)} `;
+  await createActivityLog(userId, client, action, details);
 
   res.send(payload);
 };
@@ -84,6 +84,11 @@ const login = async (req, res) => {
   });
 
   if (!user) {
+    // const { userId, client } = req.user;
+    const action = `Login attempt`;
+    const details = `Failed login attempt : ${email} `;
+    await createActivityLog(null, null, action, details);
+
     return res
       .status(401)
       .send({ status: 401, message: "Invalid username or password" });
@@ -92,6 +97,10 @@ const login = async (req, res) => {
   const validPassword = await bcrypt.compare(password, user.password);
 
   if (!validPassword) {
+    const action = `Login attempt`;
+    const details = `Failed login attempt wrong password : ${email} `;
+    await createActivityLog(null, null, action, details);
+
     return res
       .status(401)
       .send({ status: 401, message: "invalid username or password " });
@@ -119,6 +128,10 @@ const login = async (req, res) => {
     },
     process.env.jwtSecret
   );
+
+  const action = `Login `;
+  const details = `Successful login email  : ${email} `;
+  await createActivityLog(null, null, action, details);
 
   res
     // .cookie("X-AUTH-TOKEN", token, {
@@ -168,11 +181,29 @@ const changePassword = async (req, res) => {
       });
     }
 
+    if (
+      !user ||
+      !passwordMatch ||
+      (!newPassword !== repeatNewPassword) | !passwordRegex.test(newPassword)
+    ) {
+      const { userId, client } = req.user;
+
+      const action = `Change password attempt`;
+      const details = `Failed change password attempt : ${email} `;
+      await createActivityLog(userId, client, action, details);
+    }
+
     // Update the password
     user.password = await bcrypt.hash(newPassword, 10);
     user.isFirstLogin = false;
     user.status = true;
     await user.save();
+
+    const { userId, client } = req.user;
+
+    const action = `Change password`;
+    const details = `User successfully changed password : ${email} `;
+    await createActivityLog(userId, client, action, details);
 
     res.json({ status: 200, message: "Password changed successfully" });
   } catch (error) {

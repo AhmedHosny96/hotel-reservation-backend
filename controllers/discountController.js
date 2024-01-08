@@ -1,8 +1,14 @@
 const { Discount } = require("../models/db"); // Import the Discount model
+const { createActivityLog } = require("../utils/activityLog");
 
 const getAllDiscounts = async (req, res) => {
   try {
     const discounts = await Discount.findAll();
+
+    const { userId, client } = req.user;
+    const action = `View all discounts`;
+    const details = `User viewed all discounts `;
+    await createActivityLog(userId, client, action, details);
     res.json(discounts);
   } catch (error) {
     res.status(500).json({
@@ -23,6 +29,10 @@ const getDiscountById = async (req, res) => {
         .status(404)
         .json({ status: 404, message: "Discount not found" });
     }
+    const { userId, client } = req.user;
+    const action = `View discount`;
+    const details = `User viewed discount  : ${discount.id} `;
+    await createActivityLog(userId, client, action, details);
     res.json(discount);
   } catch (error) {
     res.status(500).json({
@@ -42,6 +52,12 @@ const getDiscountByHotel = async (req, res) => {
         .status(404)
         .json({ status: 404, message: "Discount not found" });
     }
+
+    const { userId, client } = req.user;
+    const action = `View hotel disounts`;
+    const details = `User viewed hotel discounts : ${discount.id} `;
+    await createActivityLog(userId, client, action, details);
+
     res.json(discount);
   } catch (error) {
     res.status(500).json({
@@ -69,6 +85,10 @@ const createDiscount = async (req, res) => {
       value,
       hotelId,
     });
+    const { userId, client } = req.user;
+    const action = `Create discount`;
+    const details = `User created discount : ${newDiscount.id} `;
+    await createActivityLog(userId, client, action, details);
 
     res.status(201).json(newDiscount);
   } catch (error) {
@@ -98,7 +118,12 @@ const updateDiscount = async (req, res) => {
       // Update with the extracted fields
     });
 
-    res.json({ message: "Discount updated successfully" });
+    const { userId, client } = req.user;
+    const action = `Update discount`;
+    const details = `User updated discount : ${discount.id} `;
+    await createActivityLog(userId, client, action, details);
+
+    res.json({ status: 200, message: "Discount updated successfully" });
   } catch (error) {
     res.status(500).json({
       status: 500,
@@ -119,6 +144,12 @@ const deleteDiscount = async (req, res) => {
     }
     // Delete the discount
     await discount.destroy();
+
+    const { userId, client } = req.user;
+    const action = `Delete discount`;
+    const details = `User deleted discount : ${discount.id} `;
+    await createActivityLog(userId, client, action, details);
+
     res.json({ message: "Discount deleted successfully" });
   } catch (error) {
     res.status(500).json({

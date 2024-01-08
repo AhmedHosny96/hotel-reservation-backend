@@ -8,6 +8,9 @@ const guestRouter = require("./routes/guestRouter");
 const permissionRouter = require("./routes/permissionRouter");
 const userRouter = require("./routes/userRouter");
 const discountRouter = require("./routes/discountRouter");
+const staffRouter = require("./routes/staffRouter");
+const expenseRouter = require("./routes/expenseRouter");
+const activityRouter = require("./routes/activityRouter");
 
 module.exports = (app) => {
   app.use(express.json());
@@ -18,6 +21,10 @@ module.exports = (app) => {
   app.use("/api/v1/reservations", reservationRoute);
   app.use("/api/v1/guests", guestRouter);
   app.use("/api/v1/discounts", discountRouter);
+  app.use("/api/v1/employees", staffRouter);
   app.use("/api/v1/users", userRouter);
+  app.use("/api/v1/expenses", expenseRouter);
+  app.use("/api/v1/expenses", expenseRouter);
+  app.use("/api/v1/user-activity", activityRouter);
   app.use("/api/v1", authRouter);
 };

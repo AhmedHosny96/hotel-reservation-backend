@@ -1,4 +1,5 @@
 const { Reservation, Room, Hotel, Guest, Discount } = require("../models/db"); // Import the Reservation model
+const { createActivityLog } = require("../utils/activityLog");
 
 // const createReservation = async (req, res) => {
 //   const { checkInDate, checkOutDate, paymentMode, roomId, hotelId, guestId } =
@@ -136,6 +137,11 @@ const createReservation = async (req, res) => {
 
     await room.update({ status: "Booked" });
 
+    const { userId, client } = req.user;
+    const action = `Create reservation`;
+    const details = `Created reservation reservationId : ${newReservation.id}`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(201).json(newReservation);
   } catch (error) {
     res
@@ -175,6 +181,11 @@ const checkOutReservation = async (req, res) => {
     // Update payment status or other relevant details as needed
     // reservation.update({ paymentStatus: "UpdatedStatus", ... });
 
+    const { userId, client } = req.user;
+    const action = `Checkout reservation`;
+    const details = `User checked out reservation : ${reservation.id}`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(200).json({ status: 200, message: "Checkout successful" });
   } catch (error) {
     res.status(500).json({ status: 500, message: "Failed to checkout" });
@@ -186,12 +197,16 @@ const getReservationsByHotel = async (req, res) => {
   try {
     const reservation = await Reservation.findAll({
       where: { hotelId: hotelId },
-      include: [Hotel, Guest, Room],
+      include: [Hotel, Guest, Room, Discount],
       order: [["id", "DESC"]],
       raw: true,
     });
 
     if (reservation.length > 0) {
+      const { userId, client } = req.user;
+      const action = `View Hotel reservations`;
+      const details = `User viewed hotel reservation`;
+      await createActivityLog(userId, client, action, details);
       res.json(reservation);
     } else {
       res.status(404).json({
@@ -216,6 +231,10 @@ const getReservationById = async (req, res) => {
         .status(404)
         .json({ status: 404, message: "Reservation not found" });
     }
+    const { userId, client } = req.user;
+    const action = `View reservation`;
+    const details = `User viewed reservation : ${reservation.id}`;
+    await createActivityLog(userId, client, action, details);
     res.status(200).json(reservation);
   } catch (error) {
     res
@@ -275,6 +294,11 @@ const updateReservation = async (req, res) => {
       hotelId,
     });
 
+    const { userId, client } = req.user;
+    const action = `Update reservation`;
+    const details = `Affected reservation : ${JSON.stringify(reservation)}`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(200).json(reservation);
   } catch (error) {
     res
@@ -303,8 +327,6 @@ const applyDiscount = async (req, res) => {
     }
 
     const pricePerNight = reservation.Room.pricePerNight;
-
-    console.log(pricePerNight);
 
     const durationInMs = reservation.checkOutDate
       ? new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)
@@ -354,6 +376,15 @@ const applyDiscount = async (req, res) => {
 
     await reservation.save();
 
+    const { userId, client } = req.user;
+    const action = `Apply discount`;
+    const details = `user applied discount -  ${JSON.stringify(
+      discount.type
+    )} - ${JSON.stringify(discount.value)} for reservationId : ${
+      reservation.id
+    }`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(200).json({
       status: 200,
       message: "Discount applied successfully",
@@ -378,6 +409,13 @@ const deleteReservation = async (req, res) => {
     }
 
     await reservation.destroy();
+    const { userId, client } = req.user;
+    const action = `Delete reservation`;
+    const details = `Affected reservation id - 
+      ${reservation.id}
+    }`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(204).end(); // No content in response for successful deletion
   } catch (error) {
     res
@@ -392,6 +430,12 @@ const getAllReservations = async (req, res) => {
       include: [Hotel, Guest, Room],
       raw: true,
     });
+
+    const { userId, client } = req.user;
+    const action = `View all reservations`;
+    const details = `User viewed all reservations`;
+    await createActivityLog(userId, client, action, details);
+
     res.status(200).json(reservations);
   } catch (error) {
     res

@@ -8,7 +8,7 @@ const path = require("path");
 // const hotelRoutes = require("./routes/hotelRoutes.js");
 app.use(
   cors({
-    origin: "https://juba-hotel.vercel.app", // Replace with your frontend URL
+    origin: ["https://juba-hotel.vercel.app", "http://localhost:8000"], // Replace with your frontend URL
     credentials: true, // Enable credentials (cookies, authorization headers)
   })
 );

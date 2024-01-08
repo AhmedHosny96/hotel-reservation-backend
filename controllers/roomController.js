@@ -1,8 +1,17 @@
 const { Room, Hotel } = require("../models/db");
+const { createActivityLog } = require("../utils/activityLog");
 
 const getAllRooms = async (req, res) => {
   try {
     const rooms = await Room.findAll({});
+
+    const { userId, client } = req.user;
+
+    const action = `View all rooms`;
+    const details = `User viewed all rooms`;
+
+    await createActivityLog(userId, client, action, details);
+
     res.send(rooms);
   } catch (error) {
     res.status(500).json({ status: 500, message: "Failed to fetch rooms" });
@@ -20,6 +29,13 @@ const getRoomsByHotel = async (req, res) => {
     });
 
     if (rooms.length > 0) {
+      const { userId, client } = req.user;
+
+      const action = `View hotel rooms`;
+      const details = `User viewed all hotel rooms hotel : ${hotelId}`;
+
+      await createActivityLog(userId, client, action, details);
+
       res.json(rooms);
     } else {
       res
@@ -45,6 +61,10 @@ const getAvailableRoomsByHotel = async (req, res) => {
     });
 
     if (rooms.length > 0) {
+      const { userId, client } = req.user;
+      const action = `View Available rooms`;
+      const details = `User viewed available rooms hotel : ${hotelId}`;
+      await createActivityLog(userId, client, action, details);
       res.json(rooms);
     } else {
       res
@@ -63,6 +83,10 @@ const getRoomById = async (req, res) => {
   try {
     const room = await Room.findByPk(id);
     if (room) {
+      const { userId, client } = req.user;
+      const action = `View room`;
+      const details = `User viewed room roomId  : ${id}`;
+      await createActivityLog(userId, client, action, details);
       res.json(room);
     } else {
       res.status(404).json({ status: 404, message: "Room not found" });
@@ -91,6 +115,14 @@ const createRoom = async (req, res) => {
       status,
       // Add other fields as needed
     });
+
+    const { userId, client } = req.user;
+
+    const action = `Create new room`;
+    const details = `User created room : ${JSON.stringify(newRoom)}`;
+
+    await createActivityLog(userId, client, action, details);
+
     res.status(201).json(newRoom);
   } catch (error) {
     res
@@ -113,6 +145,12 @@ const updateRoom = async (req, res) => {
         status,
         // Add other fields as needed
       });
+      const { userId, client } = req.user;
+
+      const action = `Update Room`;
+      const details = `Affected room  : ${JSON.stringify(room)}`;
+
+      await createActivityLog(userId, client, action, details);
       res.json({ message: "Room updated successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Room not found" });
@@ -128,6 +166,12 @@ const deleteRoom = async (req, res) => {
     const room = await Room.findByPk(id);
     if (room) {
       await room.destroy();
+      const { userId, client } = req.user;
+
+      const action = `Delete Room`;
+      const details = `Affected room roomId: ${id}`;
+
+      await createActivityLog(userId, client, action, details);
       res.json({ message: "Room deleted successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Room not found" });

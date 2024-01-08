@@ -1,14 +1,23 @@
 const router = require("express").Router();
 const reservationController = require("../controllers/reservationController");
+const { verifyToken } = require("../utils/auth");
 
 // Define routes for roles
-router.get("/", reservationController.getAllReservations);
-router.get("/hotel/:hotelId", reservationController.getReservationsByHotel);
-router.get("/:id", reservationController.getReservationById);
-router.put("/discount/:id", reservationController.applyDiscount);
-router.post("/", reservationController.createReservation);
-router.put("/:id", reservationController.updateReservation);
-router.delete("/:id", reservationController.deleteReservation);
-router.put("/checkout/:id", reservationController.checkOutReservation);
+router.get("/", verifyToken, reservationController.getAllReservations);
+router.get(
+  "/hotel/:hotelId",
+  verifyToken,
+  reservationController.getReservationsByHotel
+);
+router.get("/:id", verifyToken, reservationController.getReservationById);
+router.put("/discount/:id", verifyToken, reservationController.applyDiscount);
+router.post("/", verifyToken, reservationController.createReservation);
+router.put("/:id", verifyToken, reservationController.updateReservation);
+router.delete("/:id", verifyToken, reservationController.deleteReservation);
+router.put(
+  "/checkout/:id",
+  verifyToken,
+  reservationController.checkOutReservation
+);
 
 module.exports = router;

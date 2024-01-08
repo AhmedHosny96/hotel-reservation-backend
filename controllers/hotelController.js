@@ -1,9 +1,14 @@
 const { Hotel, User } = require("../models/db"); // Adjust the path as needed based on your file structure
 const bcrypt = require("bcrypt");
+const { createActivityLog } = require("../utils/activityLog");
 
 const getAllHotels = async (req, res) => {
   try {
     const hotels = await Hotel.findAll({});
+    const { userId, client } = req.user;
+    const action = `View all hotels`;
+    const details = `User viewed all hotels permission `;
+    await createActivityLog(userId, client, action, details);
     res.send(hotels);
   } catch (error) {
     res.status(500).json({ status: 500, message: "Failed to fetch hotels" });
@@ -15,6 +20,10 @@ const getHotelById = async (req, res) => {
   try {
     const hotel = await Hotel.findByPk(id);
     if (hotel) {
+      const { userId, client } = req.user;
+      const action = `View hotel`;
+      const details = `User viewed hotel :${hotel.id} `;
+      await createActivityLog(userId, client, action, details);
       res.json(hotel);
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });
@@ -124,6 +133,10 @@ const createHotel = async (req, res) => {
 
     // emailSender.sendEmail(email, fullName, otp);
 
+    const { userId, client } = req.user;
+    const action = `Create hotel`;
+    const details = `User created hotel :${newHotel.id} `;
+    await createActivityLog(userId, client, action, details);
     res.status(201).json(newHotel);
   } catch (error) {
     res.status(500).json({ status: 500, message: "Failed to create hotel" });
@@ -146,6 +159,10 @@ const updateHotel = async (req, res) => {
 
         // Add other fields as needed
       });
+      const { userId, client } = req.user;
+      const action = `Update hotel`;
+      const details = `User updated hotel :${hotel.id} `;
+      await createActivityLog(userId, client, action, details);
       res.json({ status: 200, message: "Hotel updated successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });
@@ -161,6 +178,10 @@ const deleteHotel = async (req, res) => {
     const hotel = await Hotel.findByPk(id);
     if (hotel) {
       await hotel.destroy();
+      const { userId, client } = req.user;
+      const action = `Delete hotel`;
+      const details = `User deleted hotel :${hotel.id} `;
+      await createActivityLog(userId, client, action, details);
       res.json({ status: 200, message: "Hotel deleted successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });

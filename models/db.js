@@ -38,6 +38,9 @@ db.User = require("./User")(sequelize, DataTypes);
 db.Permission = require("./Permission")(sequelize, DataTypes);
 db.RolePermission = require("./RolePermission")(sequelize, DataTypes);
 db.Discount = require("./Discount")(sequelize, DataTypes);
+db.Staff = require("./Staff")(sequelize, DataTypes);
+db.Activity = require("./Activity")(sequelize, DataTypes);
+db.Expense = require("./Expense")(sequelize, DataTypes);
 
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
@@ -54,11 +57,23 @@ db.Reservation.belongsTo(db.Hotel, { foreignKey: "hotelId" });
 db.Reservation.belongsTo(db.Room, { foreignKey: "roomId" });
 db.Reservation.belongsTo(db.Guest, { foreignKey: "guestId" });
 
+db.Guest.hasMany(db.Reservation, { foreignKey: "guestId" });
+
 db.Reservation.belongsTo(db.Discount, { foreignKey: "discountId" });
 db.Discount.belongsTo(db.Hotel, { foreignKey: "hotelId" });
 
 db.Guest.belongsTo(db.Hotel, { foreignKey: "hotelId" });
 db.Room.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+
+db.Staff.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+db.Hotel.hasMany(db.Staff, { foreignKey: "hotelId" });
+
+db.Activity.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+db.Activity.belongsTo(db.User, { foreignKey: "userId" });
+
+db.Expense.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+
+db.User.hasMany(db.Activity, { foreignKey: "hotelId" });
 
 db.Role.belongsToMany(db.Permission, { through: "rolePermission" });
 db.Permission.belongsToMany(db.Role, { through: "rolePermission" });
