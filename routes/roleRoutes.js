@@ -6,7 +6,7 @@ const { verifyToken } = require("../utils/auth");
 router.get("/", verifyToken, roleController.getAllRoles);
 router.get("/hotel/:hotelId", verifyToken, roleController.getRolesByHotel);
 router.get("/:id", verifyToken, roleController.getRoleById);
-router.post("/", verifyToken, roleController.createRole);
+router.post("/", roleController.createRole);
 router.put("/:id", verifyToken, roleController.updateRole);
 router.delete("/:id", verifyToken, roleController.deleteRole);
 
