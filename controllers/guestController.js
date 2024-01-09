@@ -19,7 +19,7 @@ const createGuest = async (req, res) => {
         .json({ status: 409, message: "Phone number already exists" });
     }
 
-    const relativePhotoPath = path.relative("uploads", photoID);
+    const relativePhotoPath = path.relative("/uploads", photoID);
 
     const newGuest = await Guest.create({
       fullName,
