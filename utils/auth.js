@@ -36,33 +36,33 @@ const createOTP = async (otp, userId, hotelId) => {
   }
 };
 
-// const deleteExpiredOTPRecords = async () => {
-//   try {
-//     // Find expired OTP records
-//     const expiredRecords = await OTP.findAll({
-//       where: {
-//         expiresAt: {
-//           [Op.lt]: new Date(), // Find records where expiresAt is less than the current time
-//         },
-//       },
-//     });
+const deleteExpiredOTPRecords = async () => {
+  try {
+    // Find expired OTP records
+    const expiredRecords = await OTP.findAll({
+      where: {
+        expiresAt: {
+          [Op.lt]: new Date(), // Find records where expiresAt is less than the current time
+        },
+      },
+    });
 
-//     // Delete the expired OTP records
-//     await OTP.destroy({
-//       where: {
-//         expiresAt: {
-//           [Op.lt]: new Date(), // Find records where expiresAt is less than the current time
-//         },
-//       },
-//     });
+    // Delete the expired OTP records
+    await OTP.destroy({
+      where: {
+        expiresAt: {
+          [Op.lt]: new Date(), // Find records where expiresAt is less than the current time
+        },
+      },
+    });
 
-//     console.log(`${expiredRecords.length} expired OTP records deleted.`);
-//   } catch (error) {
-//     console.error("Error deleting expired OTP records:", error);
-//   }
-// };
+    console.log(`${expiredRecords.length} expired OTP records deleted.`);
+  } catch (error) {
+    console.error("Error deleting expired OTP records:", error);
+  }
+};
 
-// // Schedule the job to run every minute (adjust as needed)
-// setInterval(deleteExpiredOTPRecords, 60 * 1000);
+// Schedule the job to run every minute (adjust as needed)
+setInterval(deleteExpiredOTPRecords, 60 * 1000);
 
 module.exports = { verifyToken, createOTP };
