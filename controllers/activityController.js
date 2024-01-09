@@ -1,8 +1,10 @@
-const { Activity, User, Role } = require("../models/db"); // Assuming your Activity model is appropriately defined
+const { Activity, User, Role } = require("../models/db");
 
 const getAllActivities = async (req, res) => {
   try {
-    const allActivities = await Activity.findAll();
+    const allActivities = await Activity.findAll({
+      order: [["id", "DESC"]], // Order by 'createdAt' in descending order
+    });
     res.status(200).json(allActivities);
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });
@@ -15,6 +17,21 @@ const getActivitiesByUser = async (req, res) => {
     const userActivities = await Activity.findAll({
       where: { userId },
       include: User,
+      order: [["id", "DESC"]], // Order by 'createdAt' in descending order
+      raw: true,
+    });
+    res.status(200).json(userActivities);
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  }
+};
+const getActivityByEmail = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const userActivities = await Activity.findAll({
+      where: { userId },
+      include: User,
+      order: [["id", "DESC"]], // Order by 'createdAt' in descending order
       raw: true,
     });
     res.status(200).json(userActivities);
@@ -30,8 +47,9 @@ const getActivitiesByHotel = async (req, res) => {
       where: { hotelId },
       include: {
         model: User,
-        include: Role, // Assuming 'roles' is the association alias in your User model
+        include: Role,
       },
+      order: [["id", "DESC"]], // Order by 'createdAt' in descending order
       raw: true,
     });
     res.status(200).json(hotelActivities);

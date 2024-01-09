@@ -5,11 +5,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
+
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -23,19 +19,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true,
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-
     status: {
       type: DataTypes.ENUM("Active", "Inactive"), // Example statuses
-      defaultValue: "Inactive",
-    },
-
-    isFirstLogin: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
+      defaultValue: "Active",
     },
 
     // roleId: {

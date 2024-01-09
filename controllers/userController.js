@@ -10,7 +10,9 @@ const getAllUsers = async (req, res) => {
     });
     res.send(users);
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Failed to fetch users" });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to fetch users" + error });
   }
 };
 
@@ -44,7 +46,7 @@ const getUsersByHotel = async (req, res) => {
 const getUserById = async (req, res) => {
   const { id } = req.params;
   try {
-    const user = await User.findByPk({
+    const user = await User.findOne({
       where: { id },
       include: {
         model: Role,
@@ -56,8 +58,31 @@ const getUserById = async (req, res) => {
       res.status(404).json({ status: 404, message: "user not found" });
     }
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Failed to fetch user" });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to fetch user" + error.message });
   }
 };
 
-module.exports = { getAllUsers, getUserById, getUsersByHotel };
+const getUserByEmail = async (req, res) => {
+  const { email } = req.query;
+  try {
+    const user = await User.findOne({
+      where: { email },
+      include: {
+        model: Role,
+      },
+    });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ status: 404, message: "user not found" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to fetch user" + error.message });
+  }
+};
+
+module.exports = { getAllUsers, getUserById, getUsersByHotel, getUserByEmail };

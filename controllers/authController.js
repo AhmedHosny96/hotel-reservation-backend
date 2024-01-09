@@ -1,18 +1,31 @@
 const jwt = require("jsonwebtoken");
-const { User, Role, Permission } = require("../models/db");
+const { User, Role, Permission, OTP, sequelize } = require("../models/db");
 const { Op } = require("sequelize");
 const emailSender = require("../utils/MailSender");
 
 const bcrypt = require("bcrypt");
 const { createActivityLog } = require("../utils/activityLog");
+const { createOTP } = require("../utils/auth");
+
+function randomOTP() {
+  const length = 6;
+  const digits = "0123456789";
+  let OTP = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    OTP += digits[randomIndex];
+  }
+  return OTP;
+}
 
 // CREATE USER
 
 const createUser = async (req, res) => {
-  const { username, phone, email, roleId, hotelId } = req.body;
+  const { phone, email, roleId, hotelId } = req.body;
   let user = await User.findOne({
     where: {
-      [Op.or]: [{ email }, { phone }, { username }],
+      [Op.or]: [{ email }, { phone }],
     },
   });
   if (user)
@@ -37,34 +50,43 @@ const createUser = async (req, res) => {
   console.log("OTP" + otp);
   //
   let payload = {
-    username,
     email,
     phone,
-    password: await bcrypt.hash(otp, 10),
     roleId,
     hotelId,
   };
   await User.create(payload);
   // send OTP to email
-  emailSender.sendEmail(
-    `Your One-Time Password (OTP) for verification is:`,
-    email,
-    username,
-    otp
-  );
+  // emailSender.sendEmail(
+  //   `Your One-Time Password (OTP) for verification is:`,
+  //   email,
+  //   username,
+  //   otp
+  // );
 
-  const { userId, client } = req.user;
+  // const { userId, client } = req?.user;
 
   const action = `Create user`;
   const details = `User created new user  : ${JSON.stringify(payload)} `;
-  await createActivityLog(userId, client, action, details);
+  await createActivityLog(
+    req?.user?.userId,
+    req?.user?.client,
+    action,
+    details
+  );
 
   res.send(payload);
 };
+
+// todo  admin OTP
+// const randomOTP = () => {
+//   return Math.floor(1000 + Math.random() * 9000).toString();
+// };
+
 // LOGIN
 
-const login = async (req, res) => {
-  const { email, password } = req.body;
+const generateOTP = async (req, res) => {
+  const { email } = req.body;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -89,21 +111,7 @@ const login = async (req, res) => {
     const details = `Failed login attempt : ${email} `;
     await createActivityLog(null, null, action, details);
 
-    return res
-      .status(401)
-      .send({ status: 401, message: "Invalid username or password" });
-  }
-
-  const validPassword = await bcrypt.compare(password, user.password);
-
-  if (!validPassword) {
-    const action = `Login attempt`;
-    const details = `Failed login attempt wrong password : ${email} `;
-    await createActivityLog(null, null, action, details);
-
-    return res
-      .status(401)
-      .send({ status: 401, message: "invalid username or password " });
+    return res.status(401).send({ status: 401, message: "Invalid email " });
   }
 
   console.log("USER", user);
@@ -112,34 +120,101 @@ const login = async (req, res) => {
 
   console.log(role);
 
-  // const permissionNames = user.role.permissions.map(
-  //   (permission) => permission.permission
-  // );
-
   console.log(user);
 
-  const token = jwt.sign(
-    {
-      userId: user.id,
-      email: email,
-      role: role,
-      client: user.hotelId,
-      // permissions: permissionNames,
-    },
-    process.env.jwtSecret
+  // todo send the otp to the owner
+  const otp = randomOTP();
+
+  emailSender.sendEmail(
+    `User ${user.email} wants to login to the system Here is OTP ${otp} which will expire in 5 minutes`,
+    "ahmed@raysmfi.com",
+    "",
+    ""
   );
+
+  await createOTP(otp, user.id, user.hotelId);
 
   const action = `Login `;
   const details = `Successful login email  : ${email} `;
   await createActivityLog(null, null, action, details);
 
-  res
-    // .cookie("X-AUTH-TOKEN", token, {
-    //   httpOnly: true,
-    //   secure: true, // Ensure it's sent only over HTTPS
-    //   sameSite: "strict", // Optionally set 'sameSite' attribute
-    // })
-    .send({ status: 200, message: "Login successful", token: token });
+  res.send({
+    status: 200,
+    message: "Successful, Contact your system admin to get the OTP",
+    // token: token,
+  });
+};
+
+// todo login with otp
+const loginWithOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  // Find the user based on the provided email
+  const user = await User.findOne({
+    where: { email },
+    include: { model: Role, Permission },
+    raw: true,
+  });
+
+  if (!user) {
+    return res.status(401).json({ status: 401, message: "User not found" });
+  }
+
+  // Retrieve OTP data for the user
+  const storedOTP = await OTP.findOne({
+    where: { userId: user.id },
+    order: [["createdAt", "DESC"]], // Order by createdAt in descending order to get the latest OTP
+  });
+
+  if (!storedOTP || storedOTP.isExpired) {
+    return res.status(410).json({
+      status: 410,
+      message: "OTP expired, please request a new OTP",
+    });
+  }
+
+  if (storedOTP.otp !== otp) {
+    return res.status(401).json({ status: 401, message: "Invalid OTP" });
+  }
+
+  try {
+    // Begin a transaction to ensure atomicity of operations
+
+    const transaction = await sequelize.transaction();
+
+    // Delete the used OTP record
+    await storedOTP.destroy({ transaction });
+
+    // Commit the transaction if everything succeeds
+    await transaction.commit();
+
+    // At this point, the OTP is valid - generate JWT token for authentication
+    const role = user["Role.name"];
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: email,
+        role: role,
+        client: user.hotelId,
+        // other claims as needed
+      },
+      process.env.jwtSecret
+    );
+
+    const action = `Login with OTP`;
+    const details = `Successful login with OTP for email: ${email}`;
+    await createActivityLog(null, null, action, details);
+
+    return res
+      .status(200)
+      .json({ status: 200, message: "Login successful", token });
+  } catch (error) {
+    // Roll back the transaction in case of any errors
+    await transaction.rollback();
+    return res
+      .status(500)
+      .json({ status: 500, message: "Internal server error" });
+  }
 };
 
 // CHANGE PASSWORD
@@ -186,11 +261,11 @@ const changePassword = async (req, res) => {
       !passwordMatch ||
       (!newPassword !== repeatNewPassword) | !passwordRegex.test(newPassword)
     ) {
-      const { userId, client } = req.user;
+      // const { userId, client } = req.user;
 
       const action = `Change password attempt`;
-      const details = `Failed change password attempt : ${email} `;
-      await createActivityLog(userId, client, action, details);
+      const details = `Failed change password attempt : ${user.email} `;
+      await createActivityLog(null, null, action, details);
     }
 
     // Update the password
@@ -199,11 +274,11 @@ const changePassword = async (req, res) => {
     user.status = true;
     await user.save();
 
-    const { userId, client } = req.user;
+    // const { userId, client } = req.user;
 
     const action = `Change password`;
-    const details = `User successfully changed password : ${email} `;
-    await createActivityLog(userId, client, action, details);
+    const details = `User successfully changed password : ${user.email} `;
+    await createActivityLog(null, null, action, details);
 
     res.json({ status: 200, message: "Password changed successfully" });
   } catch (error) {
@@ -214,6 +289,7 @@ const changePassword = async (req, res) => {
 
 module.exports = {
   createUser,
-  login,
+  generateOTP,
   changePassword,
+  loginWithOtp,
 };

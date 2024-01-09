@@ -41,6 +41,7 @@ db.Discount = require("./Discount")(sequelize, DataTypes);
 db.Staff = require("./Staff")(sequelize, DataTypes);
 db.Activity = require("./Activity")(sequelize, DataTypes);
 db.Expense = require("./Expense")(sequelize, DataTypes);
+db.OTP = require("./Otp")(sequelize, DataTypes);
 
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
@@ -72,6 +73,9 @@ db.Activity.belongsTo(db.Hotel, { foreignKey: "hotelId" });
 db.Activity.belongsTo(db.User, { foreignKey: "userId" });
 
 db.Expense.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+
+db.OTP.belongsTo(db.Hotel, { foreignKey: "hotelId" });
+db.OTP.belongsTo(db.User, { foreignKey: "userId" });
 
 db.User.hasMany(db.Activity, { foreignKey: "hotelId" });
 
