@@ -11,7 +11,7 @@ router.get("/hotel/:hotelId", verifyToken, guestController.getGuestsByHotel);
 router.get("/:id", verifyToken, guestController.getGuestById);
 router.post(
   "/",
-  verifyToken,
+  // verifyToken,
   upload.single("photoID"),
   guestController.createGuest
 );
