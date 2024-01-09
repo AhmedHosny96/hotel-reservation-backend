@@ -31,14 +31,14 @@ const createGuest = async (req, res) => {
     });
 
     // const { userId, client } = ;
-    const action = `Create guest`;
-    const details = `User created guest : ${newGuest.id} `;
-    await createActivityLog(
-      req?.user?.userId || null,
-      req?.user?.client || null,
-      action,
-      details
-    );
+    // const action = `Create guest`;
+    // const details = `User created guest : ${newGuest.id} `;
+    // await createActivityLog(
+    //   req?.user?.userId || null,
+    //   req?.user?.client || null,
+    //   action,
+    //   details
+    // );
     res.status(201).json(newGuest);
   } catch (error) {
     res
