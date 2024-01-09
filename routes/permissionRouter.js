@@ -6,7 +6,7 @@ const router = require("express").Router();
 // Define routes for hotels
 router.get("/", verifyToken, permissionController.getAllPermissions);
 router.get("/:id", verifyToken, permissionController.getPermissionById);
-router.post("/", verifyToken, permissionController.createPermission);
+router.post("/", permissionController.createPermission);
 router.put("/:id", verifyToken, permissionController.updatePermission);
 router.delete("/:id", verifyToken, permissionController.deletePermission);
 
