@@ -3,7 +3,7 @@ const app = require("express")();
 const winston = require("winston");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const multer = require("multer");
+
 const path = require("path");
 // const hotelRoutes = require("./routes/hotelRoutes.js");
 app.use(
@@ -15,10 +15,6 @@ app.use(
 app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-app.use(express.urlencoded());
-app.use(express.json());
-app.use(multer().array());
 
 require("dotenv").config();
 require("./config/config");
