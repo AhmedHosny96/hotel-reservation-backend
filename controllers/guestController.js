@@ -34,8 +34,8 @@ const createGuest = async (req, res) => {
     const action = `Create guest`;
     const details = `User created guest : ${newGuest.id} `;
     await createActivityLog(
-      req?.user?.userId,
-      req?.user?.client,
+      req?.user?.userId || null,
+      req?.user?.client || null,
       action,
       details
     );
