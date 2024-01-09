@@ -31,6 +31,5 @@ const production = {
   },
 };
 const config = process.env.NODE_ENV === "production" ? production : development;
-// const config = process.env.NODE_ENV === "production" ? production : development;
 
 module.exports = config;

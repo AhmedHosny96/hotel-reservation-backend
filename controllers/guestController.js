@@ -9,7 +9,7 @@ const { createActivityLog } = require("../utils/activityLog");
 const createGuest = async (req, res) => {
   const { fullName, gender, phone, hotelId } = req.body;
 
-  const photoID = req.file.path;
+  const photoID = req.file?.path;
 
   try {
     const existingGuest = await Guest.findOne({ where: { phone } });
@@ -65,9 +65,6 @@ const getGuestById = async (req, res) => {
 const getGuestsByHotel = async (req, res) => {
   const { hotelId } = req.params;
 
-  const ip = req.socket.remoteAddress;
-
-  console.log(ip);
   try {
     const guest = await Guest.findAll({
       where: { hotelId: hotelId },
