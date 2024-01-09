@@ -30,15 +30,20 @@ const createGuest = async (req, res) => {
       // Add other fields as needed
     });
 
-    const { userId, client } = req.user;
+    // const { userId, client } = ;
     const action = `Create guest`;
     const details = `User created guest : ${newGuest.id} `;
-    await createActivityLog(userId, client, action, details);
+    await createActivityLog(
+      req?.user?.userId,
+      req?.user?.client,
+      action,
+      details
+    );
     res.status(201).json(newGuest);
   } catch (error) {
     res
       .status(500)
-      .json({ status: 500, message: "Failed to create guest", error });
+      .json({ status: 500, message: "Failed to create guest" + error.message });
   }
 };
 
@@ -58,7 +63,7 @@ const getGuestById = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ status: 500, message: "Failed to get guest", error });
+      .json({ status: 500, message: "Failed to get guest" + error.message });
   }
 };
 
