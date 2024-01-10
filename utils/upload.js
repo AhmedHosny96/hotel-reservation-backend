@@ -4,7 +4,7 @@ const path = require("path");
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "tmp/"); // Directory where uploaded files will be stored
+    cb(null, "public/"); // Directory where uploaded files will be stored
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = req.body.phone;
