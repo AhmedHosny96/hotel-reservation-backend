@@ -9,7 +9,7 @@ const { createActivityLog } = require("../utils/activityLog");
 const createGuest = async (req, res) => {
   const { fullName, gender, phone, hotelId } = req.body;
 
-  const photoID = req.file?.path;
+  const photoID = req.file.path;
 
   try {
     const existingGuest = await Guest.findOne({ where: { phone } });
@@ -19,7 +19,7 @@ const createGuest = async (req, res) => {
         .json({ status: 409, message: "Phone number already exists" });
     }
 
-    const relativePhotoPath = path.relative("/uploads", photoID);
+    const relativePhotoPath = path.relative("uploads", photoID);
 
     const newGuest = await Guest.create({
       fullName,
@@ -101,7 +101,7 @@ const getGuestsByHotel = async (req, res) => {
 // todo available guests
 
 const getAvailableGuests = async (req, res) => {
-  const { hotelId, status } = req.query;
+  const { hotelId } = req.query;
 
   const { userId, client } = req.user;
   const action = `View hotel available guests`;
@@ -109,45 +109,37 @@ const getAvailableGuests = async (req, res) => {
   await createActivityLog(userId, client, action, details);
 
   try {
-    const guestsWithReservationsNotCheckedIn = await Guest.findAll({
+    const allGuests = await Guest.findAll({
       where: { hotelId },
       include: [
         {
           model: Reservation,
-          where: {
-            hotelId,
-            status: { [Op.not]: status },
-          },
-          required: true, // Ensure guests have associated reservations
+          required: false, // Fetch guests even if they don't have reservations
         },
       ],
       raw: true,
     });
 
-    // Extract unique guestIds using Set to filter out duplicates
-    const uniqueGuestIds = [
-      ...new Set(guestsWithReservationsNotCheckedIn.map((guest) => guest.id)),
-    ];
+    if (allGuests.length > 0) {
+      const guestsWithoutReservations = allGuests.filter((guest) => {
+        return guest.Reservations.length === 0; // Filter guests with no reservations
+      });
 
-    // Filter the original array to include only unique guests based on guestId
-    const uniqueGuests = uniqueGuestIds.map((id) =>
-      guestsWithReservationsNotCheckedIn.find((guest) => guest.id === id)
-    );
-
-    if (uniqueGuests.length > 0) {
-      res.json(uniqueGuests);
+      if (guestsWithoutReservations.length > 0) {
+        res.json(guestsWithoutReservations);
+      } else {
+        res.json(allGuests); // Return all guests if none are without reservations
+      }
     } else {
       res.status(404).json({
         status: 404,
-        message:
-          "No guests with reservations not checked in found for this hotel",
+        message: "No guests found for this hotel",
       });
     }
   } catch (error) {
     res.status(500).json({
       status: 500,
-      message:
-        "Failed to fetch guests with reservations not checked in: " + error,
+      message: "Failed to fetch guests without reservations: " + error,
     });
   }
 };

@@ -33,6 +33,10 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true,
       },
     },
+    status: {
+      type: DataTypes.ENUM("Active", "Inactive"), // Example statuses
+      defaultValue: "Active",
+    },
     // roleId: {
     //   type: DataTypes.INTEGER,
     //   allowNull: true,

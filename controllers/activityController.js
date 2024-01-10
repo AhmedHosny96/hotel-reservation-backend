@@ -49,7 +49,7 @@ const getActivitiesByHotel = async (req, res) => {
         model: User,
         include: Role,
       },
-      order: [["id", "DESC"]], // Order by 'createdAt' in descending order
+      order: [["createdAt", "DESC"]], // Order by 'createdAt' in descending order
       raw: true,
     });
     res.status(200).json(hotelActivities);

@@ -125,12 +125,12 @@ const generateOTP = async (req, res) => {
   // todo send the otp to the owner
   const otp = randomOTP();
 
-  emailSender.sendEmail(
-    `User ${user.email} wants to login to the system Here is OTP ${otp} which will expire in 5 minutes`,
-    "ahmed@raysmfi.com",
-    "",
-    ""
-  );
+  // emailSender.sendEmail(
+  //   `User ${user.email} wants to login to the system Here is OTP ${otp} which will expire in 5 minutes`,
+  //   "ahmed@raysmfi.com",
+  //   "",
+  //   ""
+  // );
 
   await createOTP(otp, user.id, user.hotelId);
 
@@ -140,7 +140,7 @@ const generateOTP = async (req, res) => {
 
   res.send({
     status: 200,
-    message: "Successful, Contact your system admin to get the OTP",
+    message: "Successful, Contact your system admin to get the OTP " + otp,
     // token: token,
   });
 };

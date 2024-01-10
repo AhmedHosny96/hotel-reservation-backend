@@ -296,7 +296,7 @@ const updateReservation = async (req, res) => {
 
     const { userId, client } = req.user;
     const action = `Update reservation`;
-    const details = `Affected reservation : ${JSON.stringify(reservation)}`;
+    const details = `Affected reservation : ${reservation.id}}`;
     await createActivityLog(userId, client, action, details);
 
     res.status(200).json(reservation);

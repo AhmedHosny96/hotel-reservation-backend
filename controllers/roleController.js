@@ -146,7 +146,7 @@ const updateRole = async (req, res) => {
 
       const { userId, client } = req.user;
       const action = `Update Role`;
-      const details = `Affected role : ${JSON.stringify(role)}`;
+      const details = `Affected role : ${role.id}`;
       await createActivityLog(userId, client, action, details);
       res.json({ message: "Role updated successfully" });
     } else {
@@ -165,7 +165,7 @@ const deleteRole = async (req, res) => {
       await role.destroy();
       const { userId, client } = req.user;
       const action = `Delete Role`;
-      const details = `Affected role : ${JSON.stringify(role)}`;
+      const details = `Affected role : ${role.id}`;
       await createActivityLog(userId, client, action, details);
 
       res.json({ message: "Role deleted successfully" });
@@ -185,3 +185,6 @@ module.exports = {
   deleteRole,
   getRolesByHotel,
 };
+/* The above code is a comment in JavaScript. It is not doing anything in terms of
+functionality, but it is used to provide information or explanations about the
+code to other developers. */

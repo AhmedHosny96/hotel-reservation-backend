@@ -105,41 +105,32 @@ const createHotel = async (req, res) => {
       email,
     });
 
-    // // create user for the hotel
-    // function generateOTP() {
-    //   const length = 6;
-    //   const digits = "0123456789";
-    //   let OTP = "";
+    // todo create user for the hotel admin
 
-    //   for (let i = 0; i < length; i++) {
-    //     const randomIndex = Math.floor(Math.random() * digits.length);
-    //     OTP += digits[randomIndex];
-    //   }
-    //   return OTP;
-    // }
+    let userPayload = {
+      phone,
+      email,
+      roleId: null,
+      hotelId: newHotel.id,
+    };
 
-    // const otp = generateOTP();
-
-    // let userPayload = {
-    //   username: name,
-    //   phone,
-    //   email,
-    //   password: await bcrypt.hash(otp, 10),
-    //   roleId,
-    //   hotelId: newHotel.id,
-    // };
-
-    // await User.create(userPayload);
+    await User.create(userPayload);
 
     // emailSender.sendEmail(email, fullName, otp);
 
-    const { userId, client } = req.user;
     const action = `Create hotel`;
     const details = `User created hotel :${newHotel.id} `;
-    await createActivityLog(userId, client, action, details);
+    await createActivityLog(
+      req?.user?.userId,
+      req?.user?.client,
+      action,
+      details
+    );
     res.status(201).json(newHotel);
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Failed to create hotel" });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to create hotel" + error.message });
   }
 };
 

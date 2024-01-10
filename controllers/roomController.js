@@ -148,7 +148,7 @@ const updateRoom = async (req, res) => {
       const { userId, client } = req.user;
 
       const action = `Update Room`;
-      const details = `Affected room  : ${JSON.stringify(room)}`;
+      const details = `Affected room  : ${room.id}`;
 
       await createActivityLog(userId, client, action, details);
       res.json({ message: "Room updated successfully" });

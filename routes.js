@@ -11,6 +11,7 @@ const discountRouter = require("./routes/discountRouter");
 const staffRouter = require("./routes/staffRouter");
 const expenseRouter = require("./routes/expenseRouter");
 const activityRouter = require("./routes/activityRouter");
+const reservationReports = require("./routes/report/reservationReports");
 
 module.exports = (app) => {
   app.use(express.json());
@@ -27,4 +28,5 @@ module.exports = (app) => {
   app.use("/api/v1/expenses", expenseRouter);
   app.use("/api/v1/user-activity", activityRouter);
   app.use("/api/v1", authRouter);
+  app.use("/api/v1/reports", reservationReports);
 };
