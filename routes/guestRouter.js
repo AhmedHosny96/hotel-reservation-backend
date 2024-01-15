@@ -12,7 +12,7 @@ router.get("/:id", verifyToken, guestController.getGuestById);
 router.post(
   "/",
   // verifyToken,
-  upload.single("photoID"),
+  // upload.single("photoID"),
   guestController.createGuest
 );
 router.put("/:id", verifyToken, guestController.updateGuest);

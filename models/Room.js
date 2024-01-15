@@ -13,16 +13,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    capacity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     pricePerNight: {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("Available", "Booked", "Maintenance"), // Example statuses
+      type: DataTypes.ENUM("Available", "Booked", "Maintenance", "Reserved"), // Example statuses
       defaultValue: "Available",
     },
 

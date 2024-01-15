@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { Room, Hotel } = require("../models/db");
 const { createActivityLog } = require("../utils/activityLog");
 
@@ -97,8 +98,7 @@ const getRoomById = async (req, res) => {
 };
 
 const createRoom = async (req, res) => {
-  const { roomNumber, type, capacity, pricePerNight, hotelId, status } =
-    req.body;
+  const { roomNumber, type, pricePerNight, hotelId, status } = req.body;
   try {
     const existingRoom = await Room.findOne({ where: { roomNumber } });
     if (existingRoom) {
@@ -109,7 +109,7 @@ const createRoom = async (req, res) => {
     const newRoom = await Room.create({
       roomNumber,
       type,
-      capacity,
+
       pricePerNight,
       hotelId,
       status,
@@ -133,30 +133,48 @@ const createRoom = async (req, res) => {
 
 const updateRoom = async (req, res) => {
   const { id } = req.params;
-  const { roomNumber, type, capacity, pricePerNight, status } = req.body;
+  const { roomNumber, type, pricePerNight, status } = req.body;
+
   try {
     const room = await Room.findByPk(id);
-    if (room) {
-      await room.update({
-        roomNumber,
-        type,
-        capacity,
-        pricePerNight,
-        status,
-        // Add other fields as needed
-      });
-      const { userId, client } = req.user;
 
-      const action = `Update Room`;
-      const details = `Affected room  : ${room.id}`;
-
-      await createActivityLog(userId, client, action, details);
-      res.json({ message: "Room updated successfully" });
-    } else {
-      res.status(404).json({ status: 404, message: "Room not found" });
+    if (!room) {
+      return res.status(404).json({ status: 404, message: "Room not found" });
     }
+
+    // Check for existing rooms with the same roomNumber excluding the current room being updated
+    const existingRoom = await Room.findOne({
+      where: {
+        roomNumber,
+        id: { [Op.not]: id }, // Exclude the current room being updated
+      },
+    });
+
+    if (existingRoom) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Room number already exists" });
+    }
+
+    // Update the room
+    await room.update({
+      roomNumber,
+      type,
+      pricePerNight,
+      status,
+    });
+
+    const { userId, client } = req.user;
+
+    const action = `Update Room`;
+    const details = `Affected room: ${room.id}`;
+
+    await createActivityLog(userId, client, action, details);
+    res.json({ status: 200, message: "Room updated successfully" });
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Failed to update room" });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to update room" + error.message });
   }
 };
 

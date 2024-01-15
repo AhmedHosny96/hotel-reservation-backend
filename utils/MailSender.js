@@ -33,9 +33,6 @@ async function sendEmail(body, to, username, otp) {
               <p style="font-size: 16px; line-height: 1.5; margin-bottom: 10px;">
                 ${body} <strong>${otp}</strong>
               </p>
-              <p style="font-size: 16px; line-height: 1.5; margin-bottom: 10px;">Please login to the system with this password.</p>
-              <p style="font-size: 16px; line-height: 1.5; margin-bottom: 10px;">Don't forget to change your password.</p>
-              <p style="font-size: 16px; line-height: 1.5; margin-bottom: 10px;">Thank you.</p>
             </div>
           </body>
         </html>

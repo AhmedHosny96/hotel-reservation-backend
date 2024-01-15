@@ -26,6 +26,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    extraService: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    extraServicePrice: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
     paymentStatus: {
       type: DataTypes.ENUM("Paid", "Unpaid", "Refunded", "Pending"), // Example statuses
       defaultValue: "Paid",
@@ -38,5 +46,3 @@ module.exports = (sequelize, DataTypes) => {
 
   return Reservation;
 };
-
-//ok the question is if i set the checkoutDate on update api how can i recalculate the totalPrice

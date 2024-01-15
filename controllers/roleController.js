@@ -36,7 +36,7 @@ const getRoleById = async (req, res) => {
 
 const createRole = async (req, res) => {
   try {
-    const { name, hotelId, permissionIds } = req.body;
+    const { name, hotelId } = req.body;
 
     const existingRole = await Role.findOne({
       where: {
@@ -51,20 +51,20 @@ const createRole = async (req, res) => {
 
     const createdRole = await Role.create({ name, hotelId });
 
-    const permissions = await Permission.findAll({
-      where: { id: permissionIds },
-    });
+    // const permissions = await Permission.findAll({
+    //   where: { id: permissionIds },
+    // });
 
-    const rolePermissions = permissions.map((permission) => ({
-      RoleId: createdRole.id,
-      PermissionId: permission.id,
-    }));
+    // const rolePermissions = permissions.map((permission) => ({
+    //   RoleId: createdRole.id,
+    //   PermissionId: permission.id,
+    // }));
 
-    await RolePermission.bulkCreate(rolePermissions);
+    // await RolePermission.bulkCreate(rolePermissions);
 
-    const { userId, client } = req.user;
+    const { userId, client } = req?.user;
     const action = `Create Role`;
-    const details = `user created role : ${JSON.stringify(createdRole)}`;
+    const details = `user created role: ${createdRole.id}`;
     await createActivityLog(userId, client, action, details);
 
     res.status(201).send(createdRole); // Send the created role as the response

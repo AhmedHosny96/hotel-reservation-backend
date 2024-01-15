@@ -71,8 +71,16 @@ const { createActivityLog } = require("../utils/activityLog");
 // };
 
 const createReservation = async (req, res) => {
-  const { checkInDate, checkOutDate, paymentMode, roomId, hotelId, guestId } =
-    req.body;
+  const {
+    checkInDate,
+    checkOutDate,
+    paymentMode,
+    extraService,
+    extraServicePrice,
+    roomId,
+    hotelId,
+    guestId,
+  } = req.body;
 
   try {
     const room = await Room.findByPk(roomId);
@@ -111,9 +119,16 @@ const createReservation = async (req, res) => {
       ? durationInMs / (1000 * 60 * 60 * 24) // Convert to days
       : 0;
 
-    const totalPrice = checkOutDate
-      ? durationInDays * pricePerNight // Calculate total price
-      : pricePerNight; // Default to price per night if checkOutDate is unknown
+    const durationInDaysNumeric = parseFloat(durationInDays);
+    const pricePerNightNumeric = parseFloat(pricePerNight);
+    const extraServicePriceNumeric = parseFloat(extraServicePrice);
+
+    // Calculate total price including extra service
+    const totalPrice =
+      checkOutDate && durationInDaysNumeric
+        ? durationInDaysNumeric * pricePerNightNumeric +
+          extraServicePriceNumeric
+        : pricePerNightNumeric + extraServicePriceNumeric; // Default to price per night + extra service price if checkOutDate is unknown
 
     const parsedCheckInDate = new Date(checkInDate);
     const formattedCheckInDate = parsedCheckInDate.toISOString().split("T")[0];
@@ -129,6 +144,8 @@ const createReservation = async (req, res) => {
       totalPrice,
       roomId,
       paymentMode,
+      extraService,
+      extraServicePrice,
       hotelId,
       guestId,
       paymentStatus: formattedCheckOutDate ? "Paid" : "Pending",
@@ -251,28 +268,32 @@ const updateReservation = async (req, res) => {
     paymentMode,
     description,
     paymentStatus,
+    extraService,
+    extraServicePrice,
     roomId,
     hotelId,
   } = req.body;
 
   try {
-    const reservation = await Reservation.findByPk(id);
+    const reservation = await Reservation.findByPk(id, {
+      include: [
+        {
+          model: Room,
+          as: "Room",
+        },
+      ],
+    });
+
     if (!reservation) {
       return res
         .status(404)
         .json({ status: 404, message: "Reservation not found" });
     }
 
-    const room = await Room.findByPk(roomId);
-    if (!room) {
-      return res.status(404).json({ status: 404, message: "Room not found" });
-    }
+    const room = reservation.Room;
 
-    //834309
-
-    const pricePerNight = room.pricePerNight; // Get price per night from the room
-
-    let updatedTotalPrice = reservation.totalPrice; // Initialize with the current total price
+    // Calculate total price based on the provided check-in and check-out dates
+    let updatedTotalPrice = reservation.totalPrice;
 
     if (checkInDate && checkOutDate) {
       const parsedCheckInDate = new Date(checkInDate);
@@ -281,8 +302,12 @@ const updateReservation = async (req, res) => {
       const durationInMs = parsedCheckOutDate - parsedCheckInDate;
       const durationInDays = durationInMs / (1000 * 60 * 60 * 24);
 
-      updatedTotalPrice = durationInDays * pricePerNight;
+      // Add the room price and extra service price to the total price
+      updatedTotalPrice =
+        durationInDays * room.pricePerNight + parseFloat(extraServicePrice);
     }
+
+    // Update the reservation with the provided data
     await reservation.update({
       checkInDate,
       checkOutDate,
@@ -290,53 +315,131 @@ const updateReservation = async (req, res) => {
       paymentMode,
       description,
       paymentStatus,
+      extraService,
+      extraServicePrice: parseFloat(extraServicePrice),
       roomId,
       hotelId,
     });
 
+    // Log the update activity
     const { userId, client } = req.user;
-    const action = `Update reservation`;
-    const details = `Affected reservation : ${reservation.id}}`;
+    const action = "Update reservation";
+    const details = `Updated reservation: ${reservation.id}`;
     await createActivityLog(userId, client, action, details);
 
+    // Send the updated reservation in the response
     res.status(200).json(reservation);
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: "Failed to update reservation" + error });
+    // Log the error details
+    console.error("Error updating reservation:", error.message);
+
+    res.status(500).json({
+      status: 500,
+      message: "Failed to update reservation",
+      error: error.message,
+    });
   }
 };
 
 // todo : apply discount to reservations
 
+// const applyDiscount = async (req, res) => {
+//   const { discountId } = req.body;
+//   const { id } = req.params;
+
+//   try {
+//     // Fetch reservation by ID
+//     const reservation = await Reservation.findOne({
+//       where: { id },
+//     });
+
+//     if (!reservation) {
+//       return res
+//         .status(404)
+//         .json({ status: 404, message: "Reservation not found" });
+//     }
+
+//     // Check if the reservation status is "Paid"
+//     if (reservation.paymentStatus !== "Paid") {
+//       return res
+//         .status(400)
+//         .json({ status: 400, message: "Payment is not made or cancelled" });
+//     }
+
+//     if (!reservation.checkOutDate) {
+//       return res
+//         .status(400)
+//         .json({ status: 400, message: "Checkout date is not set" });
+//     }
+
+//     const discount = await Discount.findOne({ where: { id: discountId } });
+
+//     if (!discount) {
+//       return res
+//         .status(404)
+//         .json({ status: 404, message: "Discount not found" });
+//     }
+
+//     // Calculate discount based on type
+//     if (discount.type === "Percentage") {
+//       const discountAmount = (reservation.totalPrice * discount.value) / 100;
+//       reservation.totalPrice -= discountAmount;
+//     } else {
+//       reservation.totalPrice -= discount.value;
+//     }
+
+//     // Apply extra service price
+//     if (extraServicePrice) {
+//       reservation.totalPrice += parseFloat(reservation.extraServicePrice);
+//     }
+
+//     // Save the reservation after applying discount and extra service price
+//     await reservation.save();
+
+//     const { userId, client } = req.user;
+//     const action = `Apply discount`;
+//     const details = `User applied discount - ${JSON.stringify(
+//       discount.type
+//     )} - ${JSON.stringify(discount.value)} for reservationId: ${
+//       reservation.id
+//     }`;
+//     await createActivityLog(userId, client, action, details);
+
+//     res.status(200).json({
+//       status: 200,
+//       message: "Discount applied successfully",
+//       updatedReservation: reservation,
+//     });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ status: 500, message: "Failed to apply discount" + error });
+//   }
+// };
+
 const applyDiscount = async (req, res) => {
   const { discountId } = req.body;
-
   const { id } = req.params;
 
   try {
-    // Fetch reservation by ID
     const reservation = await Reservation.findOne({
       where: { id },
       include: { model: Room, raw: true },
     });
+
     if (!reservation) {
       return res
         .status(404)
         .json({ status: 404, message: "Reservation not found" });
     }
 
-    const pricePerNight = reservation.Room.pricePerNight;
-
     const durationInMs = reservation.checkOutDate
       ? new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)
       : 0;
-
     const durationInDays = reservation.checkOutDate
-      ? durationInMs / (1000 * 60 * 60 * 24) // Convert to days
+      ? durationInMs / (1000 * 60 * 60 * 24)
       : 0;
 
-    //Check if the reservation status is "Paid"
     if (reservation.paymentStatus !== "Paid") {
       return res
         .status(400)
@@ -348,37 +451,31 @@ const applyDiscount = async (req, res) => {
         .status(400)
         .json({ status: 400, message: "Checkout date is not set" });
     }
-    console.log(reservation);
 
     const discount = await Discount.findOne({ where: { id: discountId } });
 
     if (!discount) {
       return res
         .status(404)
-        .json({ status: 404, message: "Reservation not found" });
+        .json({ status: 404, message: "Discount not found" });
     }
+
+    const totalPriceBeforeDiscount = reservation.totalPrice;
 
     if (discount.type === "Percentage") {
-      reservation.totalPrice = calculateDiscountPercentage(
-        reservation.totalPrice,
-        discount
-      );
-      reservation.discountId = discountId;
+      const discountAmount = (discount.value / 100) * totalPriceBeforeDiscount;
+      reservation.totalPrice = totalPriceBeforeDiscount - discountAmount;
     } else {
-      const priceAfterDiscount = calculateDiscountFixed(
-        pricePerNight,
-        discount
-      );
-
-      reservation.totalPrice = priceAfterDiscount * durationInDays;
-      reservation.discountId = discountId;
+      reservation.totalPrice = totalPriceBeforeDiscount - discount.value;
     }
+
+    reservation.discountId = discountId;
 
     await reservation.save();
 
     const { userId, client } = req.user;
     const action = `Apply discount`;
-    const details = `user applied discount -  ${JSON.stringify(
+    const details = `User applied discount - ${JSON.stringify(
       discount.type
     )} - ${JSON.stringify(discount.value)} for reservationId : ${
       reservation.id

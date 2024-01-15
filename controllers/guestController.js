@@ -9,7 +9,7 @@ const { createActivityLog } = require("../utils/activityLog");
 const createGuest = async (req, res) => {
   const { fullName, gender, phone, hotelId } = req.body;
 
-  const photoID = req.file.path;
+  // const photoID = req.file.path;
 
   try {
     const existingGuest = await Guest.findOne({ where: { phone } });
@@ -19,14 +19,13 @@ const createGuest = async (req, res) => {
         .json({ status: 409, message: "Phone number already exists" });
     }
 
-    const relativePhotoPath = path.relative("tmp", photoID);
+    // const relativePhotoPath = path.relative("uploads", photoID);
 
     const newGuest = await Guest.create({
       fullName,
       gender,
       phone,
       hotelId,
-      photoID: relativePhotoPath,
       // Add other fields as needed
     });
 
@@ -120,20 +119,16 @@ const getAvailableGuests = async (req, res) => {
       raw: true,
     });
 
-    if (allGuests.length > 0) {
-      const guestsWithoutReservations = allGuests.filter((guest) => {
-        return guest.Reservations.length === 0; // Filter guests with no reservations
-      });
+    const guestsWithoutReservations = allGuests.filter((guest) => {
+      return guest.Reservations.length === 0; // Filter guests with no reservations
+    });
 
-      if (guestsWithoutReservations.length > 0) {
-        res.json(guestsWithoutReservations);
-      } else {
-        res.json(allGuests); // Return all guests if none are without reservations
-      }
+    if (guestsWithoutReservations.length > 0) {
+      res.json(guestsWithoutReservations);
     } else {
       res.status(404).json({
         status: 404,
-        message: "No guests found for this hotel",
+        message: "No guests without reservations found for this hotel",
       });
     }
   } catch (error) {
