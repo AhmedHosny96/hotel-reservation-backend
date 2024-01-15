@@ -98,7 +98,7 @@ const getRoomById = async (req, res) => {
 };
 
 const createRoom = async (req, res) => {
-  const { roomNumber, type, pricePerNight, hotelId, status } = req.body;
+  const { roomNumber, type, pricePerNight, hotelId } = req.body;
   try {
     const existingRoom = await Room.findOne({ where: { roomNumber } });
     if (existingRoom) {
@@ -112,7 +112,7 @@ const createRoom = async (req, res) => {
 
       pricePerNight,
       hotelId,
-      status,
+
       // Add other fields as needed
     });
 
