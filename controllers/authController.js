@@ -68,22 +68,17 @@ const createUser = async (req, res) => {
 
   const action = `Create user`;
   const details = `User created new user  : ${JSON.stringify(payload)} `;
-  await createActivityLog(
-    req?.user?.userId,
-    req?.user?.client,
-    action,
-    details
-  );
+  // await createActivityLog(
+  //   req?.user?.userId,
+  //   req?.user?.client,
+  //   action,
+  //   details
+  // );
 
   res.send(payload);
 };
 
 // todo  admin OTP
-// const randomOTP = () => {
-//   return Math.floor(1000 + Math.random() * 9000).toString();
-// };
-
-// LOGIN
 
 const generateOTP = async (req, res) => {
   const { email } = req.body;
@@ -105,6 +100,13 @@ const generateOTP = async (req, res) => {
     raw: true,
   });
 
+  // if (user?.status !== "Active") {
+  //   return res.status(401).json({
+  //     status: 401,
+  //     message: "User is deactivated! Please contact your system administrator",
+  //   });
+  // }
+
   if (!user) {
     // const { userId, client } = req.user;
     const action = `Login attempt`;
@@ -113,24 +115,15 @@ const generateOTP = async (req, res) => {
 
     return res.status(401).send({ status: 401, message: "Invalid email " });
   }
-
-  console.log("USER", user);
-
-  const role = user["Role.name"];
-
-  console.log(role);
-
-  console.log(user);
+  if (user && user.status !== "Active") {
+    return res.status(401).json({
+      status: 401,
+      message: "User is deactivated! Please contact your system administrator",
+    });
+  }
 
   // todo send the otp to the owner
   const otp = randomOTP();
-
-  // emailSender.sendEmail(
-  //   `User ${user.email} wants to login to the system Here is OTP ${otp} which will expire in 5 minutes`,
-  //   "ahmed@raysmfi.com",
-  //   "",
-  //   ""
-  // );
 
   await createOTP(otp, user.id, user.hotelId);
 
@@ -158,6 +151,13 @@ const loginWithOtp = async (req, res) => {
 
   if (!user) {
     return res.status(401).json({ status: 401, message: "User not found" });
+  }
+
+  if (user?.status !== "Active") {
+    return res.status(401).json({
+      status: 401,
+      message: "User is deactivated! Please contact your system administrator",
+    });
   }
 
   // Retrieve OTP data for the user

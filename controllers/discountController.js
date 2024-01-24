@@ -8,7 +8,7 @@ const getAllDiscounts = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View all discounts`;
     const details = `User viewed all discounts `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.json(discounts);
   } catch (error) {
     res.status(500).json({
@@ -32,7 +32,7 @@ const getDiscountById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View discount`;
     const details = `User viewed discount  : ${discount.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.json(discount);
   } catch (error) {
     res.status(500).json({
@@ -56,7 +56,7 @@ const getDiscountByHotel = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View hotel disounts`;
     const details = `User viewed hotel discounts : ${discount.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.json(discount);
   } catch (error) {
@@ -88,7 +88,7 @@ const createDiscount = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Create discount`;
     const details = `User created discount : ${newDiscount.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(201).json(newDiscount);
   } catch (error) {
@@ -121,7 +121,7 @@ const updateDiscount = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Update discount`;
     const details = `User updated discount : ${discount.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.json({ status: 200, message: "Discount updated successfully" });
   } catch (error) {
@@ -148,7 +148,7 @@ const deleteDiscount = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Delete discount`;
     const details = `User deleted discount : ${discount.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.json({ message: "Discount deleted successfully" });
   } catch (error) {

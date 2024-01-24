@@ -32,7 +32,7 @@ const createGuest = async (req, res) => {
     // const { userId, client } = ;
     // const action = `Create guest`;
     // const details = `User created guest : ${newGuest.id} `;
-    // await createActivityLog(
+    // //Log(
     //   req?.user?.userId || null,
     //   req?.user?.client || null,
     //   action,
@@ -57,7 +57,7 @@ const getGuestById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View guest`;
     const details = `User viewed guest : ${guest.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(guest);
   } catch (error) {
     res
@@ -82,7 +82,7 @@ const getGuestsByHotel = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View hotel guests`;
       const details = `User viewed hotel guests `;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json(guest);
     } else {
       res.status(404).json({
@@ -105,7 +105,7 @@ const getAvailableGuests = async (req, res) => {
   const { userId, client } = req.user;
   const action = `View hotel available guests`;
   const details = `User viewed available guests `;
-  await createActivityLog(userId, client, action, details);
+  //Log(userId, client, action, details);
 
   try {
     const allGuests = await Guest.findAll({
@@ -195,7 +195,7 @@ const updateGuest = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Update guest`;
     const details = `User updated guest : ${guest.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(200).json(guest);
   } catch (error) {
@@ -219,7 +219,7 @@ const deleteGuest = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Delete guest`;
     const details = `User deleted guest : ${guest.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(204).end(); // No content in response for successful deletion
   } catch (error) {
     res
@@ -235,12 +235,35 @@ const getAllGuests = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View all guests`;
     const details = `User viewed all guests `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(guests);
   } catch (error) {
     res
       .status(500)
       .json({ status: 500, message: "Failed to get guests", error });
+  }
+};
+
+const getLast24Guests = async (req, res) => {
+  try {
+    const twentyFourHoursAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
+
+    const reservations = await Guest.findAll({
+      where: {
+        createdAt: {
+          [Op.gte]: twentyFourHoursAgo,
+        },
+        hotelId: req.params.hotelId,
+      },
+    });
+
+    res.status(200).json(reservations);
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Failed to get reservations in the last 24 hours",
+      error,
+    });
   }
 };
 
@@ -253,4 +276,5 @@ module.exports = {
   getGuestsByHotel,
   getUnReservedGuests,
   getAvailableGuests,
+  getLast24Guests,
 };

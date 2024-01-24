@@ -1,13 +1,15 @@
 const router = require("express").Router();
 const reservationController = require("../controllers/reservationController");
 
+const { fetchDataAndSendReport } = require("../AutomaticReports");
+
 const { verifyToken } = require("../utils/auth");
 
 // Define routes for roles
 router.get("/", verifyToken, reservationController.getAllReservations);
 router.get(
-  "/hotel/:hotelId",
-  verifyToken,
+  "/hotel",
+  // verifyToken,
   reservationController.getReservationsByHotel
 );
 router.get("/:id", verifyToken, reservationController.getReservationById);
@@ -20,5 +22,9 @@ router.put(
   verifyToken,
   reservationController.checkOutReservation
 );
+
+router.get("/hotel/reports", reservationController.getReservationsLast24Hours);
+
+// 0997
 
 module.exports = router;

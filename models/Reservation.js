@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
     },
     checkInDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
     checkOutDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
     totalPrice: {

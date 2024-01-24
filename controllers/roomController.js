@@ -11,7 +11,7 @@ const getAllRooms = async (req, res) => {
     const action = `View all rooms`;
     const details = `User viewed all rooms`;
 
-    await createActivityLog(userId, client, action, details);
+    // await createActivityLog(userId, client, action, details);
 
     res.send(rooms);
   } catch (error) {
@@ -35,7 +35,7 @@ const getRoomsByHotel = async (req, res) => {
       const action = `View hotel rooms`;
       const details = `User viewed all hotel rooms hotel : ${hotelId}`;
 
-      await createActivityLog(userId, client, action, details);
+      // await createActivityLog(userId, client, action, details);
 
       res.json(rooms);
     } else {
@@ -65,7 +65,7 @@ const getAvailableRoomsByHotel = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View Available rooms`;
       const details = `User viewed available rooms hotel : ${hotelId}`;
-      await createActivityLog(userId, client, action, details);
+      // await createActivityLog(userId, client, action, details);
       res.json(rooms);
     } else {
       res
@@ -87,7 +87,7 @@ const getRoomById = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View room`;
       const details = `User viewed room roomId  : ${id}`;
-      await createActivityLog(userId, client, action, details);
+      // await createActivityLog(userId, client, action, details);
       res.json(room);
     } else {
       res.status(404).json({ status: 404, message: "Room not found" });
@@ -121,7 +121,7 @@ const createRoom = async (req, res) => {
     const action = `Create new room`;
     const details = `User created room : ${JSON.stringify(newRoom)}`;
 
-    await createActivityLog(userId, client, action, details);
+    // await createActivityLog(userId, client, action, details);
 
     res.status(201).json(newRoom);
   } catch (error) {
@@ -189,7 +189,7 @@ const deleteRoom = async (req, res) => {
       const action = `Delete Room`;
       const details = `Affected room roomId: ${id}`;
 
-      await createActivityLog(userId, client, action, details);
+      // await createActivityLog(userId, client, action, details);
       res.json({ message: "Room deleted successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Room not found" });

@@ -15,4 +15,6 @@ router.post("/", verifyToken, expenseController.createExpense);
 router.put("/:id", verifyToken, expenseController.updateExpenseById);
 router.delete("/:id", verifyToken, expenseController.deleteExpenseById);
 
+router.get("/report/:hotelId", expenseController.getLast24ExpenseTotal);
+
 module.exports = router;

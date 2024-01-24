@@ -1,5 +1,6 @@
 // expenseController.js
 
+const { Op } = require("sequelize");
 const { Expense, Hotel, Staff } = require("../models/db");
 const { createActivityLog } = require("../utils/activityLog");
 
@@ -11,7 +12,7 @@ const getAllExpenses = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View all expnses`;
     const details = `User viewed all expenses `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -56,11 +57,36 @@ const createExpense = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Create expense`;
     const details = `User created expense : ${newExpense.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(201).json(newExpense);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// todo 24 hours expense
+
+const getLast24ExpenseTotal = async (req, res) => {
+  try {
+    const twentyFourHoursAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
+
+    const reservations = await Expense.sum("amount", {
+      where: {
+        createdAt: {
+          [Op.gte]: twentyFourHoursAgo,
+        },
+        hotelId: req.params.hotelId,
+      },
+    });
+
+    res.status(200).json({ totalExpense: reservations || 0 });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Failed to get reservations in the last 24 hours",
+      error,
+    });
   }
 };
 
@@ -76,7 +102,7 @@ const getExpenseById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View expense`;
     const details = `User viewed expense : ${expense.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(expense);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -99,7 +125,7 @@ const getExpensesByHotel = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View hotel expense`;
       const details = `User viewed hotel expense : ${hotelId} `;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json(expense);
     } else {
       res.status(404).json({
@@ -140,7 +166,7 @@ const updateExpenseById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Update expense`;
     const details = `User updated expense : ${updatedExpense.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(updatedExpense);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -161,7 +187,7 @@ const deleteExpenseById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Delete expense`;
     const details = `User deleted expense : ${expense.id} `;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json({ message: "Expense deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -175,4 +201,5 @@ module.exports = {
   updateExpenseById,
   deleteExpenseById,
   getExpensesByHotel,
+  getLast24ExpenseTotal,
 };

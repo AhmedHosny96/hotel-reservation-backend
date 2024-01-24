@@ -1,4 +1,12 @@
-const { Reservation, Room, Hotel, Guest, Discount } = require("../models/db"); // Import the Reservation model
+const { Op } = require("sequelize");
+const {
+  Reservation,
+  Room,
+  Hotel,
+  Guest,
+  Discount,
+  sequelize,
+} = require("../models/db"); // Import the Reservation model
 const { createActivityLog } = require("../utils/activityLog");
 
 // const createReservation = async (req, res) => {
@@ -157,7 +165,7 @@ const createReservation = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Create reservation`;
     const details = `Created reservation reservationId : ${newReservation.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(201).json(newReservation);
   } catch (error) {
@@ -201,7 +209,7 @@ const checkOutReservation = async (req, res) => {
     const { userId, client } = req.user;
     const action = `Checkout reservation`;
     const details = `User checked out reservation : ${reservation.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(200).json({ status: 200, message: "Checkout successful" });
   } catch (error) {
@@ -210,31 +218,47 @@ const checkOutReservation = async (req, res) => {
 };
 
 const getReservationsByHotel = async (req, res) => {
-  const { hotelId } = req.params;
+  const { hotelId, checkInDate } = req.query;
+
   try {
-    const reservation = await Reservation.findAll({
-      where: { hotelId: hotelId },
-      include: [Hotel, Guest, Room, Discount],
+    const reservations = await Reservation.findAll({
+      where: {
+        hotelId: hotelId,
+        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+      },
+      include: [
+        { model: Hotel },
+        {
+          model: Guest,
+          // attributes: [
+          //   ['fullName', 'guestName'], // Alias 'fullName' as 'guestName'
+          //   ['phoneNumber', 'guestPhone'], // Alias 'phoneNumber' as 'guestPhone'
+          // ],
+        },
+        { model: Room },
+        { model: Discount },
+      ],
       order: [["id", "DESC"]],
-      raw: true,
+      // raw: true,
     });
 
-    if (reservation.length > 0) {
-      const { userId, client } = req.user;
-      const action = `View Hotel reservations`;
-      const details = `User viewed hotel reservation`;
-      await createActivityLog(userId, client, action, details);
-      res.json(reservation);
+    if (reservations.length > 0) {
+      // const { userId, client } = req.user;
+      // const action = `View Hotel reservations`;
+      // const details = `User viewed hotel reservation`;
+      // Log(userId, client, action, details);
+      res.json(reservations);
     } else {
       res.status(404).json({
         status: 404,
-        message: "reservations not found for this hotel",
+        message: "Reservations not found for this hotel and check-in date.",
       });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: "Failed to fetch reservations: " + error });
+    res.status(500).json({
+      status: 500,
+      message: "Failed to fetch reservations: " + error.message,
+    });
   }
 };
 
@@ -251,12 +275,50 @@ const getReservationById = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View reservation`;
     const details = `User viewed reservation : ${reservation.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.status(200).json(reservation);
   } catch (error) {
     res
       .status(500)
       .json({ status: 500, message: "Failed to get reservation", error });
+  }
+};
+
+// todo get last 24 reservations
+const getReservationsLast24Hours = async (req, res) => {
+  try {
+    // const twentyFourHoursAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
+
+    const { hotelId, checkInDate, status } = req.query;
+    // Get count of reservations
+    const reservationCount = await Reservation.count({
+      where: {
+        hotelId: hotelId,
+        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+        paymentStatus: status,
+      },
+    });
+
+    // Get total paid amount of reservations
+    const totalPaidAmount = await Reservation.sum("totalPrice", {
+      where: {
+        hotelId: hotelId,
+        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+        paymentStatus: status,
+      },
+    });
+
+    res.status(200).json({
+      reservationCount,
+      totalPaidAmount: totalPaidAmount || 0,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message:
+        "Failed to get reservations in the last 24 hours" + error.message,
+      error,
+    });
   }
 };
 
@@ -325,7 +387,7 @@ const updateReservation = async (req, res) => {
     const { userId, client } = req.user;
     const action = "Update reservation";
     const details = `Updated reservation: ${reservation.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     // Send the updated reservation in the response
     res.status(200).json(reservation);
@@ -403,7 +465,7 @@ const updateReservation = async (req, res) => {
 //     )} - ${JSON.stringify(discount.value)} for reservationId: ${
 //       reservation.id
 //     }`;
-//     await createActivityLog(userId, client, action, details);
+//     //Log(userId, client, action, details);
 
 //     res.status(200).json({
 //       status: 200,
@@ -480,7 +542,7 @@ const applyDiscount = async (req, res) => {
     )} - ${JSON.stringify(discount.value)} for reservationId : ${
       reservation.id
     }`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(200).json({
       status: 200,
@@ -511,7 +573,7 @@ const deleteReservation = async (req, res) => {
     const details = `Affected reservation id - 
       ${reservation.id}
     }`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(204).end(); // No content in response for successful deletion
   } catch (error) {
@@ -531,7 +593,7 @@ const getAllReservations = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View all reservations`;
     const details = `User viewed all reservations`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(200).json(reservations);
   } catch (error) {
@@ -571,4 +633,7 @@ module.exports = {
   getReservationsByHotel,
   checkOutReservation,
   applyDiscount,
+
+  // get last 24 hours
+  getReservationsLast24Hours,
 };

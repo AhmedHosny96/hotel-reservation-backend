@@ -5,6 +5,7 @@ const { verifyToken } = require("../utils/auth");
 
 // Define routes for rooms
 router.get("/", verifyToken, userController.getAllUsers);
+router.put("/:id", verifyToken, userController.updateUser);
 router.get("/", userController.getUserByEmail);
 router.get("/hotel/:hotelId", verifyToken, userController.getUsersByHotel);
 router.get("/:id", verifyToken, userController.getUserById);

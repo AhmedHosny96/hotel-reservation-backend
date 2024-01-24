@@ -44,7 +44,7 @@ const getStaffByHotel = async (req, res) => {
       const action = "View All Employees";
       const details = "User viewed all staff members";
 
-      await createActivityLog(userId, client, action, details);
+      //  //       await createActivityLog(userId, client, action, details);
 
       res.json(staff); // Send response after activity log creation
     } else {
@@ -68,8 +68,6 @@ const createStaff = async (req, res) => {
     role,
     contactPerson,
     contactPersonPhone,
-    address,
-    contactAddress,
     hotelId,
   } = req.body;
 
@@ -111,8 +109,6 @@ const createStaff = async (req, res) => {
       role,
       contactPerson,
       contactPersonPhone,
-      address,
-      contactAddress,
       hotelId,
     });
     const { userId, client } = req.user;
@@ -120,7 +116,7 @@ const createStaff = async (req, res) => {
     const action = "Created new Employee";
     const details = `Created employee : ${newStaff}`;
 
-    await createActivityLog(userId, client, action, details);
+    // await createActivityLog(userId, client, action, details);
 
     res.status(201).json(newStaff);
   } catch (error) {
@@ -144,10 +140,10 @@ const updateStaff = async (req, res) => {
 
     const { userId, client } = req.user;
 
-    const action = `Updated Employee record`;
-    const details = `Affected staff : ${updateStaff.phone}`;
+    const action = `Updated Employee `;
+    const details = `User updated employee record  : ${updateStaff.id}`;
 
-    await createActivityLog(userId, client, action, details);
+    // await createActivityLog(userId, client, action, details);
 
     res.status(200).json(updatedStaff);
   } catch (error) {
@@ -172,7 +168,7 @@ const deleteStaff = async (req, res) => {
     const action = `Deleted Employee record`;
     const details = `Affected staff : ${staff.phone}`;
 
-    await createActivityLog(userId, client, action, details);
+    // await createActivityLog(userId, client, action, details);
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });

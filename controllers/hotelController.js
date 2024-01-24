@@ -23,7 +23,7 @@ const getHotelById = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View hotel`;
       const details = `User viewed hotel :${hotel.id} `;
-      await createActivityLog(userId, client, action, details);
+      //       await createActivityLog(userId, client, action, details);
       res.json(hotel);
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });
@@ -120,12 +120,12 @@ const createHotel = async (req, res) => {
 
     const action = `Create hotel`;
     const details = `User created hotel :${newHotel.id} `;
-    await createActivityLog(
-      req?.user?.userId,
-      req?.user?.client,
-      action,
-      details
-    );
+    // await createActivityLog(
+    //   req?.user?.userId,
+    //   req?.user?.client,
+    //   action,
+    //   details
+    // );
     res.status(201).json(newHotel);
   } catch (error) {
     res
@@ -153,7 +153,7 @@ const updateHotel = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Update hotel`;
       const details = `User updated hotel :${hotel.id} `;
-      await createActivityLog(userId, client, action, details);
+      //       await createActivityLog(userId, client, action, details);
       res.json({ status: 200, message: "Hotel updated successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });
@@ -172,7 +172,7 @@ const deleteHotel = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Delete hotel`;
       const details = `User deleted hotel :${hotel.id} `;
-      await createActivityLog(userId, client, action, details);
+      //       await createActivityLog(userId, client, action, details);
       res.json({ status: 200, message: "Hotel deleted successfully" });
     } else {
       res.status(404).json({ status: 404, message: "Hotel not found" });

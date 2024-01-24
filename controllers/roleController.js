@@ -9,7 +9,7 @@ const getAllRoles = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View All roles`;
     const details = `User viewed all roles`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
     res.send(roles);
   } catch (error) {
     res.status(500).json({ status: 500, message: "Failed to fetch roles" });
@@ -24,7 +24,7 @@ const getRoleById = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View Role`;
       const details = `User viewed role : ${id}`;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json(role);
     } else {
       res.status(404).json({ error: "Role not found" });
@@ -65,7 +65,7 @@ const createRole = async (req, res) => {
     const { userId, client } = req?.user;
     const action = `Create Role`;
     const details = `user created role: ${createdRole.id}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(201).send(createdRole); // Send the created role as the response
   } catch (error) {
@@ -92,7 +92,7 @@ const getRolesByHotel = async (req, res) => {
       const action = `View hotel roles`;
       const details = `user viewed hotel roles`;
 
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json(role);
     } else {
       res.status(404).json({
@@ -147,7 +147,7 @@ const updateRole = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Update Role`;
       const details = `Affected role : ${role.id}`;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json({ message: "Role updated successfully" });
     } else {
       res.status(404).json({ error: "Role not found" });
@@ -166,7 +166,7 @@ const deleteRole = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Delete Role`;
       const details = `Affected role : ${role.id}`;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
 
       res.json({ message: "Role deleted successfully" });
     } else {

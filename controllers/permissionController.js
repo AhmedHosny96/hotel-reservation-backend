@@ -8,7 +8,7 @@ const getAllPermissions = async (req, res) => {
     const { userId, client } = req.user;
     const action = `View all permissions`;
     const details = `User viewed all permissions`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.send(permissions);
   } catch (error) {
@@ -26,7 +26,7 @@ const getPermissionById = async (req, res) => {
       const { userId, client } = req.user;
       const action = `View permission`;
       const details = `User viewed permission id - ${role.id}`;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
 
       res.json(role);
     } else {
@@ -63,7 +63,7 @@ const createPermission = async (req, res) => {
     const details = `User created permission : ${JSON.stringify(
       newPermission
     )}`;
-    await createActivityLog(userId, client, action, details);
+    //Log(userId, client, action, details);
 
     res.status(201).json(newPermission);
   } catch (error) {
@@ -87,7 +87,7 @@ const updatePermission = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Update permission`;
       const details = `User updated permission :${permission.id} `;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
 
       res.json({ message: "Permission updated successfully" });
     } else {
@@ -107,7 +107,7 @@ const deletePermission = async (req, res) => {
       const { userId, client } = req.user;
       const action = `Delete permission`;
       const details = `User deleted permission :${role.id} `;
-      await createActivityLog(userId, client, action, details);
+      //Log(userId, client, action, details);
       res.json({ message: "role deleted successfully" });
     } else {
       res.status(404).json({ error: "role not found" });

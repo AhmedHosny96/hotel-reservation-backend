@@ -23,10 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    address: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
+
     contactPerson: {
       type: DataTypes.STRING,
       allowNull: true, // Depending on your business rules
@@ -35,9 +32,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true, // Depending on your business rules
     },
-    contactAddress: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    status: {
+      type: DataTypes.ENUM("Active", "Inactive"), // Example statuses
+      defaultValue: "Active",
     },
   });
 

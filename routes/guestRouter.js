@@ -23,4 +23,7 @@ router.get(
   guestController.getUnReservedGuests
 );
 
+// todo reports
+router.get("/report/:hotelId", guestController.getLast24Guests);
+
 module.exports = router;
