@@ -10,8 +10,16 @@ const {
 const { createActivityLog } = require("../utils/activityLog");
 
 // const createReservation = async (req, res) => {
-//   const { checkInDate, checkOutDate, paymentMode, roomId, hotelId, guestId } =
-//     req.body;
+//   const {
+//     checkInDate,
+//     checkOutDate,
+//     paymentMode,
+//     extraService,
+//     extraServicePrice,
+//     roomId,
+//     hotelId,
+//     guestId,
+//   } = req.body;
 
 //   try {
 //     const room = await Room.findByPk(roomId);
@@ -39,36 +47,56 @@ const { createActivityLog } = require("../utils/activityLog");
 //         .json({ status: 400, message: "Room is not available for booking" });
 //     }
 
-//     await room.update({ status: "Booked" });
-
 //     const pricePerNight = room.pricePerNight; // Get price per night from the room
 
 //     // Calculate duration of stay in milliseconds
-//     const durationInMs = new Date(checkOutDate) - new Date(checkInDate);
-//     const durationInDays = durationInMs / (1000 * 60 * 60 * 24); // Convert to days
+//     const durationInMs = checkOutDate
+//       ? new Date(checkOutDate) - new Date(checkInDate)
+//       : 0;
 
-//     console.log(durationInDays);
+//     const durationInDays = checkOutDate
+//       ? durationInMs / (1000 * 60 * 60 * 24) // Convert to days
+//       : 0;
 
-//     const totalPrice = durationInDays * pricePerNight; // Calculate total price
+//     const durationInDaysNumeric = parseFloat(durationInDays);
+//     const pricePerNightNumeric = parseFloat(pricePerNight);
+//     const extraServicePriceNumeric = parseFloat(extraServicePrice);
+
+//     // Calculate total price including extra service
+//     const totalPrice =
+//       checkOutDate && durationInDaysNumeric
+//         ? durationInDaysNumeric * pricePerNightNumeric +
+//           extraServicePriceNumeric
+//         : pricePerNightNumeric + extraServicePriceNumeric; // Default to price per night + extra service price if checkOutDate is unknown
 
 //     const parsedCheckInDate = new Date(checkInDate);
 //     const formattedCheckInDate = parsedCheckInDate.toISOString().split("T")[0];
 
-//     const parsedCheckOutDate = new Date(checkOutDate);
-//     const formattedCheckOutDate = parsedCheckOutDate
-//       .toISOString()
-//       .split("T")[0];
+//     const formattedCheckOutDate = checkOutDate
+//       ? new Date(checkOutDate).toISOString().split("T")[0]
+//       : null;
+
 //     // Create the reservation
 //     const newReservation = await Reservation.create({
 //       checkInDate: formattedCheckInDate,
-//       checkOutDate: checkOutDate ? formattedCheckOutDate : null,
-//       totalPrice: checkOutDate ? totalPrice : pricePerNight,
+//       checkOutDate: formattedCheckOutDate,
+//       totalPrice,
 //       roomId,
 //       paymentMode,
+//       extraService,
+//       extraServicePrice,
 //       hotelId,
 //       guestId,
+//       paymentStatus: formattedCheckOutDate ? "Paid" : "Pending",
 //       // Other reservation details...
 //     });
+
+//     await room.update({ status: "Booked" });
+
+//     const { userId, client } = req.user;
+//     const action = `Create reservation`;
+//     const details = `Created reservation reservationId : ${newReservation.id}`;
+//     //Log(userId, client, action, details);
 
 //     res.status(201).json(newReservation);
 //   } catch (error) {
@@ -81,7 +109,6 @@ const { createActivityLog } = require("../utils/activityLog");
 const createReservation = async (req, res) => {
   const {
     checkInDate,
-    checkOutDate,
     paymentMode,
     extraService,
     extraServicePrice,
@@ -95,6 +122,7 @@ const createReservation = async (req, res) => {
     if (!room) {
       return res.status(404).json({ status: 404, message: "Room not found" });
     }
+
     const existingReservation = await Reservation.findOne({
       where: {
         guestId,
@@ -116,39 +144,17 @@ const createReservation = async (req, res) => {
         .json({ status: 400, message: "Room is not available for booking" });
     }
 
-    const pricePerNight = room.pricePerNight; // Get price per night from the room
-
-    // Calculate duration of stay in milliseconds
-    const durationInMs = checkOutDate
-      ? new Date(checkOutDate) - new Date(checkInDate)
-      : 0;
-
-    const durationInDays = checkOutDate
-      ? durationInMs / (1000 * 60 * 60 * 24) // Convert to days
-      : 0;
-
-    const durationInDaysNumeric = parseFloat(durationInDays);
-    const pricePerNightNumeric = parseFloat(pricePerNight);
-    const extraServicePriceNumeric = parseFloat(extraServicePrice);
-
-    // Calculate total price including extra service
-    const totalPrice =
-      checkOutDate && durationInDaysNumeric
-        ? durationInDaysNumeric * pricePerNightNumeric +
-          extraServicePriceNumeric
-        : pricePerNightNumeric + extraServicePriceNumeric; // Default to price per night + extra service price if checkOutDate is unknown
+    const pricePerNight = room.pricePerNight;
 
     const parsedCheckInDate = new Date(checkInDate);
     const formattedCheckInDate = parsedCheckInDate.toISOString().split("T")[0];
 
-    const formattedCheckOutDate = checkOutDate
-      ? new Date(checkOutDate).toISOString().split("T")[0]
-      : null;
+    // Calculate total price for the initial reservation
+    const totalPrice = pricePerNight + parseFloat(extraServicePrice);
 
-    // Create the reservation
+    // Create the initial reservation without a checkout date
     const newReservation = await Reservation.create({
       checkInDate: formattedCheckInDate,
-      checkOutDate: formattedCheckOutDate,
       totalPrice,
       roomId,
       paymentMode,
@@ -156,28 +162,30 @@ const createReservation = async (req, res) => {
       extraServicePrice,
       hotelId,
       guestId,
-      paymentStatus: formattedCheckOutDate ? "Paid" : "Pending",
+      paymentStatus: "Pending",
       // Other reservation details...
     });
 
+    // Update the room status
     await room.update({ status: "Booked" });
 
     const { userId, client } = req.user;
-    const action = `Create reservation`;
-    const details = `Created reservation reservationId : ${newReservation.id}`;
-    //Log(userId, client, action, details);
+    const action = "Create reservation";
+    const details = `Created reservation reservationId: ${newReservation.id}`;
+    // Log(userId, client, action, details);
 
     res.status(201).json(newReservation);
   } catch (error) {
     res
       .status(500)
-      .json({ status: 500, message: "Failed to create reservation" + error });
+      .json({ status: 500, message: "Failed to create reservation: " + error });
   }
 };
 
 // todo : checkout feature
 const checkOutReservation = async (req, res) => {
   const { id } = req.params;
+  const { checkOutDate } = req.body;
 
   try {
     const reservation = await Reservation.findByPk(id, {
@@ -197,34 +205,81 @@ const checkOutReservation = async (req, res) => {
       });
     }
 
+    // Check if checkout date is set
+    if (!checkOutDate) {
+      return res.status(400).json({
+        status: 400,
+        message:
+          "Checkout date is mandatory and must be set before checking out.",
+      });
+    }
+
+    // Validate if checkOutDate is within an acceptable range (e.g., not in the past or too far in the future)
+    const currentDateTime = new Date();
+    const checkOutDateTime = new Date(checkOutDate);
+
+    if (checkOutDateTime < currentDateTime) {
+      return res.status(400).json({
+        status: 400,
+        message: "Checkout date cannot be set to a past date.",
+      });
+    }
+
+    // You can define a maximum acceptable future date as needed
+    const maxFutureDate = new Date();
+    maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 1); // Example: 1 year in the future
+
+    if (checkOutDateTime > maxFutureDate) {
+      return res.status(400).json({
+        status: 400,
+        message: "Checkout date cannot be set too far in the future.",
+      });
+    }
+
+    if (reservation.paymentStatus !== "Paid") {
+      return res.status(400).json({
+        status: 400,
+        message: "Please pay the pending amounts, then checkout",
+      });
+    }
+
     // Update reservation status to "Checked out"
-    await reservation.update({ status: "Checked out" });
+    reservation.status = "Checked out";
+    reservation.checkOutDate = checkOutDate;
 
     // Update room status to "Available"
+    await reservation.save();
     await reservation.Room.update({ status: "Available" });
-
-    // Update payment status or other relevant details as needed
-    // reservation.update({ paymentStatus: "UpdatedStatus", ... });
 
     const { userId, client } = req.user;
     const action = `Checkout reservation`;
     const details = `User checked out reservation : ${reservation.id}`;
-    //Log(userId, client, action, details);
+    // Log(userId, client, action, details);
 
-    res.status(200).json({ status: 200, message: "Checkout successful" });
+    res.status(200).json({
+      status: 200,
+      message: "Checkout successful",
+      updatedReservation: reservation,
+    });
   } catch (error) {
-    res.status(500).json({ status: 500, message: "Failed to checkout" });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to checkout" + error });
   }
 };
 
 const getReservationsByHotel = async (req, res) => {
-  const { hotelId, checkInDate } = req.query;
+  const { hotelId, createdAt, status } = req.query;
 
   try {
     const reservations = await Reservation.findAll({
       where: {
         hotelId: hotelId,
-        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+        createdAt: {
+          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
+          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+        },
+        status: status,
       },
       include: [
         { model: Hotel },
@@ -289,13 +344,17 @@ const getReservationsLast24Hours = async (req, res) => {
   try {
     // const twentyFourHoursAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
 
-    const { hotelId, checkInDate, status } = req.query;
+    const { hotelId, createdAt, status } = req.query;
     // Get count of reservations
     const reservationCount = await Reservation.count({
       where: {
         hotelId: hotelId,
-        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+        createdAt: {
+          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
+          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+        },
         paymentStatus: status,
+        status: "Checked in",
       },
     });
 
@@ -303,8 +362,12 @@ const getReservationsLast24Hours = async (req, res) => {
     const totalPaidAmount = await Reservation.sum("totalPrice", {
       where: {
         hotelId: hotelId,
-        checkInDate: sequelize.literal(`DATE(checkInDate) = '${checkInDate}'`),
+        createdAt: {
+          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
+          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+        },
         paymentStatus: status,
+        status: "Checked in",
       },
     });
 
@@ -334,6 +397,7 @@ const updateReservation = async (req, res) => {
     extraServicePrice,
     roomId,
     hotelId,
+    discountId,
   } = req.body;
 
   try {
@@ -352,24 +416,9 @@ const updateReservation = async (req, res) => {
         .json({ status: 404, message: "Reservation not found" });
     }
 
-    const room = reservation.Room;
-
     // Calculate total price based on the provided check-in and check-out dates
     let updatedTotalPrice = reservation.totalPrice;
 
-    if (checkInDate && checkOutDate) {
-      const parsedCheckInDate = new Date(checkInDate);
-      const parsedCheckOutDate = new Date(checkOutDate);
-
-      const durationInMs = parsedCheckOutDate - parsedCheckInDate;
-      const durationInDays = durationInMs / (1000 * 60 * 60 * 24);
-
-      // Add the room price and extra service price to the total price
-      updatedTotalPrice =
-        durationInDays * room.pricePerNight + parseFloat(extraServicePrice);
-    }
-
-    // Update the reservation with the provided data
     await reservation.update({
       checkInDate,
       checkOutDate,
@@ -381,6 +430,7 @@ const updateReservation = async (req, res) => {
       extraServicePrice: parseFloat(extraServicePrice),
       roomId,
       hotelId,
+      discountId,
     });
 
     // Log the update activity
@@ -389,7 +439,12 @@ const updateReservation = async (req, res) => {
     const details = `Updated reservation: ${reservation.id}`;
     //Log(userId, client, action, details);
 
+    if (discountId) {
+      await applyDiscount(reservation, discountId);
+    }
+
     // Send the updated reservation in the response
+
     res.status(200).json(reservation);
   } catch (error) {
     // Log the error details
@@ -477,82 +532,34 @@ const updateReservation = async (req, res) => {
 //       .status(500)
 //       .json({ status: 500, message: "Failed to apply discount" + error });
 //   }
-// };
+// };che
 
-const applyDiscount = async (req, res) => {
-  const { discountId } = req.body;
-  const { id } = req.params;
-
+// todo : DISCOUNT
+const applyDiscount = async (reservation, discountId) => {
   try {
-    const reservation = await Reservation.findOne({
-      where: { id },
-      include: { model: Room, raw: true },
-    });
-
-    if (!reservation) {
-      return res
-        .status(404)
-        .json({ status: 404, message: "Reservation not found" });
-    }
-
-    const durationInMs = reservation.checkOutDate
-      ? new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)
-      : 0;
-    const durationInDays = reservation.checkOutDate
-      ? durationInMs / (1000 * 60 * 60 * 24)
-      : 0;
-
-    if (reservation.paymentStatus !== "Paid") {
-      return res
-        .status(400)
-        .json({ status: 400, message: "Payment is not made or cancelled" });
-    }
-
-    if (!reservation.checkOutDate) {
-      return res
-        .status(400)
-        .json({ status: 400, message: "Checkout date is not set" });
-    }
-
     const discount = await Discount.findOne({ where: { id: discountId } });
 
     if (!discount) {
-      return res
-        .status(404)
-        .json({ status: 404, message: "Discount not found" });
+      return new Error("not discount");
     }
 
     const totalPriceBeforeDiscount = reservation.totalPrice;
 
-    if (discount.type === "Percentage") {
-      const discountAmount = (discount.value / 100) * totalPriceBeforeDiscount;
-      reservation.totalPrice = totalPriceBeforeDiscount - discountAmount;
-    } else {
-      reservation.totalPrice = totalPriceBeforeDiscount - discount.value;
-    }
+    // Assuming the discount type is always "Fixed"
+    reservation.totalPrice = totalPriceBeforeDiscount - discount.value;
 
     reservation.discountId = discountId;
 
     await reservation.save();
 
-    const { userId, client } = req.user;
+    const { userId, client } = req.user; // Note: req is not defined here, consider passing userId and client as parameters
     const action = `Apply discount`;
-    const details = `User applied discount - ${JSON.stringify(
-      discount.type
-    )} - ${JSON.stringify(discount.value)} for reservationId : ${
-      reservation.id
-    }`;
-    //Log(userId, client, action, details);
+    const details = `User applied discount - ${discount.type} - ${discount.value} for reservationId : ${reservation.id}`;
+    // Log(userId, client, action, details);
 
-    res.status(200).json({
-      status: 200,
-      message: "Discount applied successfully",
-      updatedReservation: reservation,
-    });
+    return reservation;
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: "Failed to apply discount" + error });
+    return new Error("Error occurred while applying discount");
   }
 };
 
@@ -583,6 +590,30 @@ const deleteReservation = async (req, res) => {
   }
 };
 
+// todo : RESERVATION BY GUEST
+
+const getReservationByGuest = async (req, res) => {
+  const { guestId } = req.params;
+
+  try {
+    const bookings = await Reservation.findAll({
+      where: { guestId },
+      include: [Hotel, Guest, Room, Discount],
+      order: [["createdAt", "DESC"]], // Order by createdAt in descending order
+      // Include any associations or attributes you need
+    });
+
+    if (bookings.length > 0) {
+      res.json(bookings);
+    } else {
+      res.status(404).json({ message: "No bookings found for this guest." });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to fetch bookings", error: error.message });
+  }
+};
 const getAllReservations = async (req, res) => {
   try {
     const reservations = await Reservation.findAll({
@@ -603,27 +634,6 @@ const getAllReservations = async (req, res) => {
   }
 };
 
-function calculateDiscountPercentage(totalPrice, discount) {
-  // if (discount) {
-  if (discount && discount.type === "Percentage") {
-    const discountAmount = (discount.value / 100) * totalPrice;
-    return totalPrice - discountAmount;
-    // } else if (discount.type === "Fixed") {
-
-    //   return totalPrice - discount.value;
-    // }
-  }
-  return totalPrice; // Return original price if no discount
-}
-
-function calculateDiscountFixed(originalPrice, discount) {
-  if (discount && discount.type === "Fixed") {
-    const discountAmount = originalPrice - discount.value;
-    return discountAmount >= 0 ? discountAmount : 0;
-  }
-  return 0; // Return 0 if no discount or invalid discount type
-}
-
 module.exports = {
   createReservation,
   getReservationById,
@@ -632,7 +642,8 @@ module.exports = {
   getAllReservations,
   getReservationsByHotel,
   checkOutReservation,
-  applyDiscount,
+  // applyDiscount,
+  getReservationByGuest,
 
   // get last 24 hours
   getReservationsLast24Hours,

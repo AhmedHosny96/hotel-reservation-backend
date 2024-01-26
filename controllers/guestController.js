@@ -12,12 +12,12 @@ const createGuest = async (req, res) => {
   // const photoID = req.file.path;
 
   try {
-    const existingGuest = await Guest.findOne({ where: { phone } });
-    if (existingGuest) {
-      return res
-        .status(409)
-        .json({ status: 409, message: "Phone number already exists" });
-    }
+    // const existingGuest = await Guest.findOne({ where: { phone } });
+    // if (existingGuest) {
+    //   return res
+    //     .status(409)
+    //     .json({ status: 409, message: "Phone number already exists" });
+    // }
 
     // const relativePhotoPath = path.relative("uploads", photoID);
 

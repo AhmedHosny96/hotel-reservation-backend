@@ -13,7 +13,7 @@ router.get(
   reservationController.getReservationsByHotel
 );
 router.get("/:id", verifyToken, reservationController.getReservationById);
-router.put("/discount/:id", verifyToken, reservationController.applyDiscount);
+// router.put("/discount/:id", verifyToken, reservationController.applyDiscount);
 router.post("/", verifyToken, reservationController.createReservation);
 router.put("/:id", verifyToken, reservationController.updateReservation);
 router.delete("/:id", verifyToken, reservationController.deleteReservation);
@@ -23,6 +23,7 @@ router.put(
   reservationController.checkOutReservation
 );
 
+router.get("/guest/:guestId", reservationController.getReservationByGuest);
 router.get("/hotel/reports", reservationController.getReservationsLast24Hours);
 
 // 0997

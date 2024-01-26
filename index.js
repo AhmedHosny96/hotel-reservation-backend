@@ -9,6 +9,8 @@ const path = require("path");
 const AutomaticReports = require("./AutomaticReports");
 const googleSheetReport = require("./googleSheetReport");
 
+require("./utils/backgroundService");
+
 // const hotelRoutes = require("./routes/hotelRoutes.js");
 app.use(
   cors({

@@ -22,7 +22,7 @@ function randomOTP() {
 // CREATE USER
 
 const createUser = async (req, res) => {
-  const { phone, email, roleId, hotelId } = req.body;
+  const { phone, name, email, roleId, hotelId } = req.body;
   let user = await User.findOne({
     where: {
       [Op.or]: [{ email }, { phone }],
@@ -52,6 +52,7 @@ const createUser = async (req, res) => {
   let payload = {
     email,
     phone,
+    name,
     roleId,
     hotelId,
   };

@@ -90,16 +90,18 @@ const createStaff = async (req, res) => {
         message: "Staff with phone number exists",
       });
     }
-    const existingContact = await Staff.findOne({
-      where: { contactPersonPhone },
-    });
-    if (existingContact) {
-      return res.status(400).json({
-        status: 400,
-        message: "Contact phone number exists",
-      });
-    }
+    // if (contactPersonPhone !== null) {
+    //   const existingContact = await Staff.findOne({
+    //     where: { contactPersonPhone },
+    //   });
 
+    //   if (existingContact) {
+    //     return res.status(400).json({
+    //       status: 400,
+    //       message: "Contact phone number exists",
+    //     });
+    //   }
+    // }
     // If the contact person's phone number exists, proceed to create the staff record
     const newStaff = await Staff.create({
       fullName,

@@ -110,6 +110,7 @@ const createHotel = async (req, res) => {
     let userPayload = {
       phone,
       email,
+      name,
       roleId: null,
       hotelId: newHotel.id,
     };
