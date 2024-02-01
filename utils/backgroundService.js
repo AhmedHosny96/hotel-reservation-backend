@@ -1,15 +1,22 @@
 const cron = require("node-cron");
-const { Reservation } = require("../models/db");
+const { Reservation, Room } = require("../models/db");
+const { Op } = require("sequelize");
 
-cron.schedule("09 16 * * *", async () => {
+cron.schedule("00 08 * * *", async () => {
   try {
-    // Get reservations that are still checked in and need to be processed
+    // Get active reservations with the specified conditions
     const activeReservations = await Reservation.findAll({
       where: {
         checkOutDate: null,
         paymentStatus: "Paid",
-        status: "Checked in",
+        status: {
+          [Op.not]: "Checked out",
+        },
+        createdAt: {
+          [Op.lt]: new Date().toISOString().split("T")[0],
+        },
       },
+      include: [Room],
     });
 
     // Process each active reservation
@@ -29,8 +36,8 @@ cron.schedule("09 16 * * *", async () => {
       // If no reservation exists, create a new record for the next day
       if (!existingReservation) {
         const newRecord = await Reservation.create({
-          checkInDate: reservation.checkInDate,
-          totalPrice: reservation.totalPrice, // You may need to adjust this based on your logic
+          checkInDate: nextDay.toISOString().split("T")[0],
+          totalPrice: reservation.Room.pricePerNight,
           roomId: reservation.roomId,
           paymentMode: reservation.paymentMode,
           extraService: reservation.extraService,
@@ -40,6 +47,17 @@ cron.schedule("09 16 * * *", async () => {
           paymentStatus: "Pending",
           // Other reservation details...
         });
+        console.log(
+          `Created new reservation for guestId ${reservation.guestId} on ${
+            nextDay.toISOString().split("T")[0]
+          }`
+        );
+      } else {
+        console.log(
+          `Skipped reservation for guestId ${reservation.guestId} on ${
+            nextDay.toISOString().split("T")[0]
+          } because a reservation already exists.`
+        );
       }
     }
 

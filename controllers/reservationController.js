@@ -215,26 +215,26 @@ const checkOutReservation = async (req, res) => {
     }
 
     // Validate if checkOutDate is within an acceptable range (e.g., not in the past or too far in the future)
-    const currentDateTime = new Date();
-    const checkOutDateTime = new Date(checkOutDate);
+    // const currentDateTime = new Date();
+    // const checkOutDateTime = new Date(checkOutDate);
 
-    if (checkOutDateTime < currentDateTime) {
-      return res.status(400).json({
-        status: 400,
-        message: "Checkout date cannot be set to a past date.",
-      });
-    }
+    // if (checkOutDateTime < currentDateTime) {
+    //   return res.status(400).json({
+    //     status: 400,
+    //     message: "Checkout date cannot be set to a past date.",
+    //   });
+    // }
 
-    // You can define a maximum acceptable future date as needed
-    const maxFutureDate = new Date();
-    maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 1); // Example: 1 year in the future
+    // // You can define a maximum acceptable future date as needed
+    // const maxFutureDate = new Date();
+    // maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 1); // Example: 1 year in the future
 
-    if (checkOutDateTime > maxFutureDate) {
-      return res.status(400).json({
-        status: 400,
-        message: "Checkout date cannot be set too far in the future.",
-      });
-    }
+    // if (checkOutDateTime > maxFutureDate) {
+    //   return res.status(400).json({
+    //     status: 400,
+    //     message: "Checkout date cannot be set too far in the future.",
+    //   });
+    // }
 
     if (reservation.paymentStatus !== "Paid") {
       return res.status(400).json({
@@ -276,8 +276,7 @@ const getReservationsByHotel = async (req, res) => {
       where: {
         hotelId: hotelId,
         createdAt: {
-          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
-          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+          [Op.eq]: createdAt,
         },
         status: status,
       },
@@ -350,8 +349,7 @@ const getReservationsLast24Hours = async (req, res) => {
       where: {
         hotelId: hotelId,
         createdAt: {
-          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
-          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+          [Op.eq]: createdAt,
         },
         paymentStatus: status,
         status: "Checked in",
@@ -363,8 +361,7 @@ const getReservationsLast24Hours = async (req, res) => {
       where: {
         hotelId: hotelId,
         createdAt: {
-          [Op.gte]: new Date(`${createdAt}T00:00:00.000Z`), // Greater than or equal to the specified date
-          [Op.lt]: new Date(`${createdAt}T23:59:59.999Z`), // Less than the next day
+          [Op.eq]: createdAt,
         },
         paymentStatus: status,
         status: "Checked in",
