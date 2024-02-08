@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.get("/", verifyToken, expenseController.getAllExpenses);
 router.get(
-  "/hotel/:hotelId",
-  verifyToken,
+  "/hotel",
+  // verifyToken,
   expenseController.getExpensesByHotel
 );
 router.get("/:id", verifyToken, expenseController.getExpenseById);

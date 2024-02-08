@@ -100,44 +100,96 @@ const getGuestsByHotel = async (req, res) => {
 // todo available guests
 
 const getAvailableGuests = async (req, res) => {
-  const { hotelId } = req.query;
-
-  const { userId, client } = req.user;
-  const action = `View hotel available guests`;
-  const details = `User viewed available guests `;
-  //Log(userId, client, action, details);
+  const { hotelId, status } = req.query;
 
   try {
-    const allGuests = await Guest.findAll({
+    const guests = await Guest.findAll({
       where: { hotelId },
-      include: [
-        {
-          model: Reservation,
-          required: false, // Fetch guests even if they don't have reservations
-        },
-      ],
+      include: {
+        model: Hotel,
+      },
       raw: true,
     });
 
-    const guestsWithoutReservations = allGuests.filter((guest) => {
-      return guest.Reservations.length === 0; // Filter guests with no reservations
-    });
+    if (guests.length > 0) {
+      // Filter guests who are not checked in
+      const notCheckedInGuests = await Promise.all(
+        guests.map(async (guest) => {
+          const reservations = await Reservation.findAll({
+            where: {
+              guestId: guest.id,
+              status: { [Op.ne]: status }, // Guest status is not equal to the specified status
+            },
+          });
+          return reservations.length === 0 ? guest : null;
+        })
+      );
 
-    if (guestsWithoutReservations.length > 0) {
-      res.json(guestsWithoutReservations);
+      // Remove null values from the array
+      const filteredGuests = notCheckedInGuests.filter(
+        (guest) => guest !== null
+      );
+
+      if (filteredGuests.length > 0) {
+        res.json(filteredGuests);
+      } else {
+        res.status(404).json({
+          status: 404,
+          message: "No guests found who are not checked in for this hotel.",
+        });
+      }
     } else {
       res.status(404).json({
         status: 404,
-        message: "No guests without reservations found for this hotel",
+        message: "Guests not found for this hotel.",
       });
     }
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      message: "Failed to fetch guests without reservations: " + error,
-    });
+    res
+      .status(500)
+      .json({ status: 500, message: "Failed to fetch guests: " + error });
   }
 };
+
+// const getAvailableGuests = async (req, res) => {
+//   const { hotelId } = req.query;
+
+//   const { userId, client } = req.user;
+//   const action = `View hotel available guests`;
+//   const details = `User viewed available guests `;
+//   //Log(userId, client, action, details);
+
+//   try {
+//     const allGuests = await Guest.findAll({
+//       where: { hotelId },
+//       include: [
+//         {
+//           model: Reservation,
+//           required: false, // Fetch guests even if they don't have reservations
+//         },
+//       ],
+//       raw: true,
+//     });
+
+//     const guestsWithoutReservations = allGuests.filter((guest) => {
+//       return guest.Reservations.length === 0; // Filter guests with no reservations
+//     });
+
+//     if (guestsWithoutReservations.length > 0) {
+//       res.json(guestsWithoutReservations);
+//     } else {
+//       res.status(404).json({
+//         status: 404,
+//         message: "No guests without reservations found for this hotel",
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       status: 500,
+//       message: "Failed to fetch guests without reservations: " + error,
+//     });
+//   }
+// };
 
 const getUnReservedGuests = async (req, res) => {
   const { hotelId } = req.params;

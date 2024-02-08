@@ -1,6 +1,6 @@
 // expenseController.js
-
 const { Op } = require("sequelize");
+const moment = require("moment");
 const { Expense, Hotel, Staff } = require("../models/db");
 const { createActivityLog } = require("../utils/activityLog");
 
@@ -9,9 +9,9 @@ const getAllExpenses = async (req, res) => {
   try {
     const expenses = await Expense.findAll();
 
-    const { userId, client } = req.user;
-    const action = `View all expnses`;
-    const details = `User viewed all expenses `;
+    // const { userId, client } = req.user;
+    // const action = `View all expnses`;
+    // const details = `User viewed all expenses `;
     //Log(userId, client, action, details);
     res.status(200).json(expenses);
   } catch (error) {
@@ -110,27 +110,39 @@ const getExpenseById = async (req, res) => {
 };
 
 const getExpensesByHotel = async (req, res) => {
-  const { hotelId } = req.params;
+  let { hotelId, fromDate, toDate } = req.query;
+
+  // If fromDate and toDate are not provided, set them to today's date
+  if (!fromDate || !toDate) {
+    fromDate = moment().startOf("day").format("YYYY-MM-DD");
+    toDate = moment().endOf("day").format("YYYY-MM-DD");
+  }
 
   try {
-    const expense = await Expense.findAll({
-      where: { hotelId: hotelId },
+    const expenses = await Expense.findAll({
+      where: {
+        hotelId,
+        date: {
+          [Op.between]: [fromDate, toDate],
+        },
+      },
       include: {
         model: Hotel,
       },
       raw: true,
     });
 
-    if (expense.length > 0) {
-      const { userId, client } = req.user;
-      const action = `View hotel expense`;
-      const details = `User viewed hotel expense : ${hotelId} `;
-      //Log(userId, client, action, details);
-      res.json(expense);
+    if (expenses.length > 0) {
+      // const { userId, client } = req.user;
+      // const action = `View hotel expenses`;
+      // const details = `User viewed hotel expenses: ${hotelId}`;
+      // Log(userId, client, action, details);
+      res.json(expenses);
     } else {
       res.status(404).json({
         status: 404,
-        message: "expenses not found for this hotel",
+        message:
+          "Expenses not found for this hotel within the specified date range.",
       });
     }
   } catch (error) {

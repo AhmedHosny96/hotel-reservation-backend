@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const { Reservation, Room } = require("../models/db");
 const { Op } = require("sequelize");
 
-cron.schedule("00 08 * * *", async () => {
+cron.schedule("00 11 * * *", async () => {
   try {
     // Get active reservations with the specified conditions
     const activeReservations = await Reservation.findAll({

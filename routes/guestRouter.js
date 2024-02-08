@@ -6,7 +6,7 @@ const { upload } = require("../utils/upload");
 
 // Define routes for hotels
 router.get("/", verifyToken, guestController.getAllGuests);
-router.get("/hotel", verifyToken, guestController.getAvailableGuests);
+router.get("/hotel", guestController.getAvailableGuests);
 router.get("/hotel/:hotelId", verifyToken, guestController.getGuestsByHotel);
 router.get("/:id", verifyToken, guestController.getGuestById);
 router.post(
